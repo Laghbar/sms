@@ -70,15 +70,20 @@ export default function Dashboard({ stats }) {
                                 </div>
                             </Link>
 
-                            <div className="flex items-center gap-4 rounded-lg border border-gray-200 p-5 opacity-50 cursor-not-allowed">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-2xl">
+                            <Link
+                                href={route('admin.users')}
+                                className="flex items-center gap-4 rounded-lg border border-gray-200 p-5 transition hover:border-indigo-400 hover:bg-indigo-50"
+                            >
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-2xl">
                                     👥
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-gray-800">Manage Users</p>
-                                    <p className="text-sm text-gray-500">Coming soon</p>
+                                    <p className="font-semibold text-gray-800">View All Users</p>
+                                    <p className="text-sm text-gray-500">
+                                        Search, filter and browse all users
+                                    </p>
                                 </div>
-                            </div>
+                            </Link>
                         </div>
                     </div>
                 </div>

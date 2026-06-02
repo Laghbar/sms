@@ -29,6 +29,12 @@ export default function AdminLayout({ header, children }) {
                                     Dashboard
                                 </NavLink>
                                 <NavLink
+                                    href={route('admin.users')}
+                                    active={route().current('admin.users')}
+                                >
+                                    Users
+                                </NavLink>
+                                <NavLink
                                     href={route('admin.bulk-import.index')}
                                     active={route().current('admin.bulk-import.index')}
                                 >
@@ -113,6 +119,12 @@ export default function AdminLayout({ header, children }) {
                             active={route().current('admin.dashboard')}
                         >
                             Dashboard
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('admin.users')}
+                            active={route().current('admin.users')}
+                        >
+                            Users
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             href={route('admin.bulk-import.index')}

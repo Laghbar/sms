@@ -22,6 +22,7 @@ Route::get('/dashboard', function () {
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/bulk-import', [BulkImportController::class, 'index'])->name('bulk-import.index');
     Route::post('/bulk-import', [BulkImportController::class, 'store'])->name('bulk-import.store');
 });
