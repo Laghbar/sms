@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\Role;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -45,5 +47,22 @@ class User extends Authenticatable
     public function isStudent(): bool
     {
         return $this->role === Role::Student;
+    }
+
+    // Teacher relationships
+    public function taughtModules(): BelongsToMany
+    {
+        return $this->belongsToMany(Module::class, 'teacher_module', 'teacher_id', 'module_id');
+    }
+
+    // Student relationships
+    public function enrolledModules(): BelongsToMany
+    {
+        return $this->belongsToMany(Module::class, 'student_module', 'student_id', 'module_id');
+    }
+
+    public function results(): HasMany
+    {
+        return $this->hasMany(Result::class, 'student_id');
     }
 }

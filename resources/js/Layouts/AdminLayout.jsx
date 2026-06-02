@@ -1,3 +1,4 @@
+import AnnouncementBanner from '@/Components/AnnouncementBanner';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
@@ -16,8 +17,9 @@ export default function AdminLayout({ header, children }) {
                     <div className="flex h-16 justify-between">
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
-                                <Link href={route('admin.dashboard')}>
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
+                                <Link href={route('admin.dashboard')} className="flex items-center gap-2">
+                                    <ApplicationLogo className="block h-8 w-auto fill-current text-indigo-600" />
+                                    <span className="text-lg font-bold tracking-tight text-gray-900">SMS</span>
                                 </Link>
                             </div>
 
@@ -39,6 +41,24 @@ export default function AdminLayout({ header, children }) {
                                     active={route().current('admin.bulk-import.index')}
                                 >
                                     Bulk Import
+                                </NavLink>
+                                <NavLink
+                                    href={route('admin.modules.index')}
+                                    active={route().current('admin.modules.index')}
+                                >
+                                    Modules
+                                </NavLink>
+                                <NavLink
+                                    href={route('admin.schedules.index')}
+                                    active={route().current('admin.schedules.index')}
+                                >
+                                    Schedules
+                                </NavLink>
+                                <NavLink
+                                    href={route('admin.announcements.index')}
+                                    active={route().current('admin.announcements.index')}
+                                >
+                                    Announcements
                                 </NavLink>
                             </div>
                         </div>
@@ -132,6 +152,24 @@ export default function AdminLayout({ header, children }) {
                         >
                             Bulk Import
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('admin.modules.index')}
+                            active={route().current('admin.modules.index')}
+                        >
+                            Modules
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('admin.schedules.index')}
+                            active={route().current('admin.schedules.index')}
+                        >
+                            Schedules
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('admin.announcements.index')}
+                            active={route().current('admin.announcements.index')}
+                        >
+                            Announcements
+                        </ResponsiveNavLink>
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4">
@@ -148,6 +186,8 @@ export default function AdminLayout({ header, children }) {
                     </div>
                 </div>
             </nav>
+
+            <AnnouncementBanner />
 
             {header && (
                 <header className="bg-white shadow">
