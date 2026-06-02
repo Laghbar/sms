@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(composer --version)",
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell(php --version)",
+      "PowerShell(laravel --version 2>&1)",
+      "PowerShell(& \"C:\\\\xampp8\\\\mysql\\\\bin\\\\mysql.exe\" -u root -e \"CREATE DATABASE IF NOT EXISTS sms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\" 2>&1; Write-Host \"Exit: $LASTEXITCODE\")"
+    ]
+  }
+}
