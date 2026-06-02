@@ -1,4 +1,3 @@
-import AnnouncementBanner from '@/Components/AnnouncementBanner';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
@@ -7,7 +6,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function TeacherLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+    const { auth: { user }, new_events_count } = usePage().props;
     const [open, setOpen] = useState(false);
 
     return (
@@ -26,7 +25,17 @@ export default function TeacherLayout({ header, children }) {
                                 <NavLink href={route('teacher.dashboard')} active={route().current('teacher.dashboard')}>Dashboard</NavLink>
                                 <NavLink href={route('teacher.modules')}   active={route().current('teacher.modules')}>My Modules</NavLink>
                                 <NavLink href={route('teacher.schedule')}  active={route().current('teacher.schedule')}>Schedule</NavLink>
-                                <NavLink href={route('teacher.tps.index')} active={route().current('teacher.tps.index')}>TPs</NavLink>
+                                <NavLink href={route('teacher.tps.index')}    active={route().current('teacher.tps.index')}>TPs</NavLink>
+                                <NavLink href={route('teacher.events.index')} active={route().current('teacher.events.index')}>
+                                    <span className="relative">
+                                        Events
+                                        {new_events_count > 0 && (
+                                            <span className="absolute -right-4 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                                                {new_events_count > 9 ? '9+' : new_events_count}
+                                            </span>
+                                        )}
+                                    </span>
+                                </NavLink>
                             </div>
                         </div>
 
@@ -64,7 +73,10 @@ export default function TeacherLayout({ header, children }) {
                         <ResponsiveNavLink href={route('teacher.dashboard')} active={route().current('teacher.dashboard')}>Dashboard</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.modules')}   active={route().current('teacher.modules')}>My Modules</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.schedule')}  active={route().current('teacher.schedule')}>Schedule</ResponsiveNavLink>
-                        <ResponsiveNavLink href={route('teacher.tps.index')} active={route().current('teacher.tps.index')}>TPs</ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('teacher.tps.index')}    active={route().current('teacher.tps.index')}>TPs</ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('teacher.events.index')} active={route().current('teacher.events.index')}>
+                            Events {new_events_count > 0 && <span className="ms-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{new_events_count > 9 ? '9+' : new_events_count}</span>}
+                        </ResponsiveNavLink>
                     </div>
                     <div className="border-t border-gray-200 pb-1 pt-4">
                         <div className="px-4">
@@ -78,8 +90,6 @@ export default function TeacherLayout({ header, children }) {
                     </div>
                 </div>
             </nav>
-
-            <AnnouncementBanner />
 
             {header && (
                 <header className="bg-white shadow">

@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\BulkImportController;
+use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\ScheduleController;
+use App\Http\Controllers\Teacher\EventController as TeacherEventController;
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Teacher\TpController;
+use App\Http\Controllers\Student\EventController as StudentEventController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -46,10 +48,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
     Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
 
-    Route::get('/announcements',                    [AnnouncementController::class, 'index'])->name('announcements.index');
-    Route::post('/announcements/generate',          [AnnouncementController::class, 'generate'])->name('announcements.generate');
-    Route::post('/announcements',                   [AnnouncementController::class, 'store'])->name('announcements.store');
-    Route::delete('/announcements/{announcement}',  [AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+    Route::get('/events',                    [AdminEventController::class, 'index'])->name('events.index');
+    Route::post('/events',                   [AdminEventController::class, 'store'])->name('events.store');
+    Route::put('/events/{event}',            [AdminEventController::class, 'update'])->name('events.update');
+    Route::delete('/events/{event}',         [AdminEventController::class, 'destroy'])->name('events.destroy');
+    Route::post('/events/{event}/notify',    [AdminEventController::class, 'notify'])->name('events.notify');
 });
 
 Route::middleware(['auth', 'verified', 'teacher'])->prefix('teacher')->name('teacher.')->group(function () {
@@ -61,6 +64,13 @@ Route::middleware(['auth', 'verified', 'teacher'])->prefix('teacher')->name('tea
     Route::post('/tps',             [TpController::class, 'store'])->name('tps.store');
     Route::put('/tps/{tp}',         [TpController::class, 'update'])->name('tps.update');
     Route::delete('/tps/{tp}',      [TpController::class, 'destroy'])->name('tps.destroy');
+
+    Route::get('/events',                          [TeacherEventController::class, 'index'])->name('events.index');
+    Route::post('/events',                         [TeacherEventController::class, 'store'])->name('events.store');
+    Route::put('/events/{event}',                  [TeacherEventController::class, 'update'])->name('events.update');
+    Route::delete('/events/{event}',               [TeacherEventController::class, 'destroy'])->name('events.destroy');
+    Route::post('/events/{event}/register',        [TeacherEventController::class, 'register'])->name('events.register');
+    Route::delete('/events/{event}/register',      [TeacherEventController::class, 'unregister'])->name('events.unregister');
 });
 
 Route::middleware(['auth', 'verified', 'student'])->prefix('student')->name('student.')->group(function () {
@@ -68,6 +78,10 @@ Route::middleware(['auth', 'verified', 'student'])->prefix('student')->name('stu
     Route::get('/results',   [StudentController::class, 'results'])->name('results');
     Route::get('/schedule',  [StudentController::class, 'schedule'])->name('schedule');
     Route::get('/tps',       [StudentController::class, 'tps'])->name('tps');
+
+    Route::get('/events',                          [StudentEventController::class, 'index'])->name('events.index');
+    Route::post('/events/{event}/register',        [StudentEventController::class, 'register'])->name('events.register');
+    Route::delete('/events/{event}/register',      [StudentEventController::class, 'unregister'])->name('events.unregister');
 });
 
 Route::middleware('auth')->group(function () {

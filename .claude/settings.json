@@ -5,7 +5,8 @@
       "Bash(Select-Object -ExpandProperty FullName)",
       "PowerShell(head -50)",
       "Bash(findstr /i \"APP_ ANTHROPIC\")",
-      "Bash(php artisan *)"
+      "Bash(php artisan *)",
+      "PowerShell(\\(Get-Content \"c:\\\\Users\\\\PC\\\\sms\\\\.env\"\\) | Where-Object { $_ -notmatch \"ANTHROPIC_API_KEY\" -and $_.Trim\\(\\) -ne \"\" } | Set-Content \"c:\\\\Users\\\\PC\\\\sms\\\\.env\" -Encoding utf8)"
     ]
   }
 }
