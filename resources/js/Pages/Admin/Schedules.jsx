@@ -1,406 +1,208 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useCallback, useState } from 'react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { useRef, useState } from 'react';
 
-const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-const DAY_LABELS = { monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday' };
-const TYPE_LABELS = { cours: 'Cours', td: 'TD', tp: 'TP' };
-const TYPE_COLORS = {
-    cours: 'bg-blue-100 text-blue-700',
-    td:    'bg-orange-100 text-orange-700',
-    tp:    'bg-green-100 text-green-700',
-};
-const PARITY_LABELS = { all: 'All weeks', odd: 'Odd weeks', even: 'Even weeks' };
+const SPEC_COLORS = [
+    { bg: 'bg-indigo-600', light: 'bg-indigo-50 border-indigo-200', text: 'text-indigo-700', badge: 'bg-indigo-100 text-indigo-700' },
+    { bg: 'bg-emerald-600', light: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', badge: 'bg-emerald-100 text-emerald-700' },
+    { bg: 'bg-amber-500',   light: 'bg-amber-50  border-amber-200',  text: 'text-amber-700',  badge: 'bg-amber-100  text-amber-700'  },
+    { bg: 'bg-rose-600',    light: 'bg-rose-50   border-rose-200',   text: 'text-rose-700',   badge: 'bg-rose-100   text-rose-700'   },
+];
 
-function formatTime(t) {
-    return t ? t.slice(0, 5) : '';
+function FileIcon({ ext }) {
+    const isPdf  = ext === 'pdf';
+    const isWord = ['doc','docx'].includes(ext);
+    if (isPdf)  return <span className="text-2xl">📄</span>;
+    if (isWord) return <span className="text-2xl">📝</span>;
+    return <span className="text-2xl">📎</span>;
 }
 
-function Pagination({ links }) {
-    return (
-        <div className="flex flex-wrap justify-center gap-1">
-            {links.map((link, i) =>
-                link.url ? (
-                    <Link
-                        key={i}
-                        href={link.url}
-                        className={`rounded px-3 py-1 text-sm ${
-                            link.active
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                        }`}
-                        dangerouslySetInnerHTML={{ __html: link.label }}
-                    />
-                ) : (
-                    <span
-                        key={i}
-                        className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-300"
-                        dangerouslySetInnerHTML={{ __html: link.label }}
-                    />
-                )
-            )}
-        </div>
-    );
+function getExt(filename) {
+    return filename?.split('.').pop().toLowerCase() ?? '';
 }
 
-function Modal({ open, onClose, title, children }) {
-    if (!open) return null;
-    return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-            onClick={onClose}
-        >
-            <div
-                className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <h3 className="mb-5 text-lg font-semibold text-gray-900">{title}</h3>
-                {children}
-            </div>
-        </div>
-    );
-}
+function SemesterCard({ semester, color }) {
+    const fileRef  = useRef(null);
+    const [confirm, setConfirm] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
-const EMPTY_FORM = {
-    module_id:   '',
-    day:         'monday',
-    start_time:  '08:00',
-    end_time:    '10:00',
-    room:        '',
-    type:        'cours',
-    week_parity: 'all',
-};
+    const { data, setData, post, processing, errors, reset } = useForm({ file: null });
 
-function ScheduleFormModal({ schedule, modules, onClose }) {
-    const isEdit = !!schedule;
-    const { data, setData, post, put, errors, processing, reset } = useForm(
-        schedule
-            ? {
-                  module_id:   String(schedule.module_id),
-                  day:         schedule.day,
-                  start_time:  formatTime(schedule.start_time),
-                  end_time:    formatTime(schedule.end_time),
-                  room:        schedule.room,
-                  type:        schedule.type,
-                  week_parity: schedule.week_parity,
-              }
-            : EMPTY_FORM
-    );
-
-    function submit(e) {
-        e.preventDefault();
-        const opts = { onSuccess: () => { reset(); onClose(); } };
-        isEdit
-            ? put(route('admin.schedules.update', schedule.id), opts)
-            : post(route('admin.schedules.store'), opts);
-    }
-
-    const field = 'rounded-lg border border-gray-300 w-full px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400';
-    const errCls = 'mt-1 text-xs text-red-500';
-
-    return (
-        <form onSubmit={submit} className="space-y-4">
-            <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Module</label>
-                <select
-                    value={data.module_id}
-                    onChange={(e) => setData('module_id', e.target.value)}
-                    className={field}
-                >
-                    <option value="">Select a module…</option>
-                    {modules.map((m) => (
-                        <option key={m.id} value={m.id}>
-                            {m.name} ({m.code})
-                        </option>
-                    ))}
-                </select>
-                {errors.module_id && <p className={errCls}>{errors.module_id}</p>}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Day</label>
-                    <select
-                        value={data.day}
-                        onChange={(e) => setData('day', e.target.value)}
-                        className={field}
-                    >
-                        {DAYS.map((d) => (
-                            <option key={d} value={d}>{DAY_LABELS[d]}</option>
-                        ))}
-                    </select>
-                    {errors.day && <p className={errCls}>{errors.day}</p>}
-                </div>
-
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Type</label>
-                    <select
-                        value={data.type}
-                        onChange={(e) => setData('type', e.target.value)}
-                        className={field}
-                    >
-                        <option value="cours">Cours</option>
-                        <option value="td">TD</option>
-                        <option value="tp">TP</option>
-                    </select>
-                    {errors.type && <p className={errCls}>{errors.type}</p>}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Start Time</label>
-                    <input
-                        type="time"
-                        value={data.start_time}
-                        onChange={(e) => setData('start_time', e.target.value)}
-                        className={field}
-                    />
-                    {errors.start_time && <p className={errCls}>{errors.start_time}</p>}
-                </div>
-
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">End Time</label>
-                    <input
-                        type="time"
-                        value={data.end_time}
-                        onChange={(e) => setData('end_time', e.target.value)}
-                        className={field}
-                    />
-                    {errors.end_time && <p className={errCls}>{errors.end_time}</p>}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Room</label>
-                    <input
-                        type="text"
-                        value={data.room}
-                        onChange={(e) => setData('room', e.target.value)}
-                        className={field}
-                        placeholder="e.g. A101"
-                    />
-                    {errors.room && <p className={errCls}>{errors.room}</p>}
-                </div>
-
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Week Parity</label>
-                    <select
-                        value={data.week_parity}
-                        onChange={(e) => setData('week_parity', e.target.value)}
-                        className={field}
-                    >
-                        <option value="all">All weeks</option>
-                        <option value="odd">Odd weeks</option>
-                        <option value="even">Even weeks</option>
-                    </select>
-                    {errors.week_parity && <p className={errCls}>{errors.week_parity}</p>}
-                </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-                <button
-                    type="button"
-                    onClick={onClose}
-                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
-                >
-                    Cancel
-                </button>
-                <button
-                    type="submit"
-                    disabled={processing}
-                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
-                >
-                    {processing ? 'Saving…' : isEdit ? 'Update Schedule' : 'Create Schedule'}
-                </button>
-            </div>
-        </form>
-    );
-}
-
-export default function Schedules({ schedules, modules, filters }) {
-    const [moduleFilter, setModuleFilter] = useState(filters.module_id ?? '');
-    const [creating, setCreating] = useState(false);
-    const [editing, setEditing] = useState(null);
-    const [deletingId, setDeletingId] = useState(null);
-
-    const applyFilter = useCallback((val) => {
-        router.get(route('admin.schedules.index'), { module_id: val || undefined }, {
-            preserveState: true,
-            replace: true,
-        });
-    }, []);
-
-    function handleModuleFilter(e) {
-        const val = e.target.value;
-        setModuleFilter(val);
-        applyFilter(val);
-    }
-
-    function confirmDelete(id) {
-        router.delete(route('admin.schedules.destroy', id), {
-            onFinish: () => setDeletingId(null),
-        });
-    }
-
-    return (
-        <AdminLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">Schedules</h2>
-                    <button
-                        onClick={() => setCreating(true)}
-                        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-                    >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        New Schedule
-                    </button>
-                </div>
+    function handleFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        setData('file', file);
+        // Auto-submit on file pick
+        router.post(
+            route('admin.schedules.upload', semester.id),
+            { file },
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onSuccess: () => { reset('file'); if (fileRef.current) fileRef.current.value = ''; },
             }
-        >
-            <Head title="Schedules" />
+        );
+    }
 
-            {/* Create modal */}
-            <Modal open={creating} onClose={() => setCreating(false)} title="Create Schedule">
-                <ScheduleFormModal modules={modules} schedule={null} onClose={() => setCreating(false)} />
-            </Modal>
+    function handleDelete() {
+        setDeleting(true);
+        router.delete(route('admin.schedules.delete-timetable', semester.id), {
+            preserveScroll: true,
+            onFinish: () => { setDeleting(false); setConfirm(false); },
+        });
+    }
 
-            {/* Edit modal */}
-            <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit Schedule">
-                {editing && (
-                    <ScheduleFormModal modules={modules} schedule={editing} onClose={() => setEditing(null)} />
+    const ext = getExt(semester.timetable_name);
+
+    return (
+        <div className={`rounded-xl border ${color.light} p-4 flex flex-col gap-3`}>
+            {/* Header */}
+            <div className="flex items-center gap-2">
+                <span className={`rounded-lg ${color.bg} px-3 py-1 text-sm font-bold text-white`}>
+                    {semester.name}
+                </span>
+                {semester.has_timetable && (
+                    <span className={`rounded-full ${color.badge} px-2 py-0.5 text-[10px] font-semibold`}>
+                        File uploaded
+                    </span>
                 )}
-            </Modal>
+            </div>
 
-            {/* Delete confirm modal */}
-            <Modal open={!!deletingId} onClose={() => setDeletingId(null)} title="Delete Schedule">
-                <p className="mb-6 text-sm text-gray-600">
-                    Are you sure you want to delete this schedule entry?
-                </p>
-                <div className="flex justify-end gap-3">
-                    <button
-                        onClick={() => setDeletingId(null)}
-                        className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+            {/* File info or empty state */}
+            {semester.has_timetable ? (
+                <div className="flex items-center gap-3 rounded-lg bg-white p-3 shadow-sm border border-gray-100">
+                    <FileIcon ext={ext} />
+                    <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-medium text-gray-800">{semester.timetable_name}</p>
+                        <p className="text-xs text-gray-400 uppercase">{ext} file</p>
+                    </div>
+                    <a
+                        href={semester.timetable_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`shrink-0 rounded-lg border ${color.light} px-2.5 py-1 text-xs font-medium ${color.text} hover:opacity-80`}
                     >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={() => confirmDelete(deletingId)}
-                        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-                    >
-                        Delete
-                    </button>
+                        View
+                    </a>
                 </div>
-            </Modal>
+            ) : (
+                <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-center">
+                    <p className="text-xs text-gray-400">No timetable uploaded yet</p>
+                </div>
+            )}
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+                {/* Upload / Replace button */}
+                <label className={`flex-1 cursor-pointer rounded-lg border ${color.light} px-3 py-2 text-center text-xs font-semibold ${color.text} hover:opacity-80 transition`}>
+                    {processing ? 'Uploading…' : semester.has_timetable ? 'Replace File' : 'Upload Timetable'}
+                    <input
+                        ref={fileRef}
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFile}
+                        disabled={processing}
+                    />
+                </label>
 
-                    {/* Filter bar */}
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <select
-                                value={moduleFilter}
-                                onChange={handleModuleFilter}
-                                className="rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                            >
-                                <option value="">All modules</option>
-                                {modules.map((m) => (
-                                    <option key={m.id} value={m.id}>
-                                        {m.name} ({m.code})
-                                    </option>
-                                ))}
-                            </select>
-                            {moduleFilter && (
-                                <button
-                                    onClick={() => { setModuleFilter(''); applyFilter(''); }}
-                                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50"
-                                >
-                                    Clear
-                                </button>
-                            )}
+                {/* Delete */}
+                {semester.has_timetable && !confirm && (
+                    <button
+                        onClick={() => setConfirm(true)}
+                        className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-100"
+                    >
+                        Remove
+                    </button>
+                )}
+                {semester.has_timetable && confirm && (
+                    <div className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5">
+                        <span className="text-[11px] text-red-700">Sure?</span>
+                        <button
+                            onClick={handleDelete}
+                            disabled={deleting}
+                            className="rounded bg-red-600 px-1.5 py-0.5 text-[11px] font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                        >
+                            {deleting ? '…' : 'Yes'}
+                        </button>
+                        <button onClick={() => setConfirm(false)} className="text-[11px] text-gray-400 hover:text-gray-600">No</button>
+                    </div>
+                )}
+            </div>
+
+            {errors.file && <p className="text-xs text-red-500">{errors.file}</p>}
+        </div>
+    );
+}
+
+function SpecCard({ spec, color }) {
+    return (
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+            {/* Spec header */}
+            <div className={`${color.bg} px-6 py-4`}>
+                <div className="flex items-center gap-3">
+                    <span className="rounded-lg bg-white/20 px-3 py-1 font-mono text-sm font-bold text-white">
+                        {spec.code}
+                    </span>
+                    <h3 className="text-base font-semibold text-white">{spec.name}</h3>
+                    <span className="ms-auto text-xs text-white/70">
+                        {spec.semesters.length} semester{spec.semesters.length !== 1 ? 's' : ''}
+                    </span>
+                </div>
+            </div>
+
+            {/* Semester cards grid */}
+            <div className={`grid gap-4 p-5 ${spec.semesters.length >= 2 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
+                {spec.semesters.map(sem => (
+                    <SemesterCard key={sem.id} semester={sem} color={color} />
+                ))}
+                {spec.semesters.length === 0 && (
+                    <p className="col-span-2 text-center text-sm text-gray-400 py-4">No semesters configured.</p>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export default function Schedules({ specializations }) {
+    const { flash } = usePage().props;
+
+    return (
+        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Timetable Management</h2>}>
+            <Head title="Timetables" />
+
+            <div className="py-10">
+                <div className="mx-auto max-w-5xl space-y-6 px-4 sm:px-6 lg:px-8">
+
+                    {flash?.success && (
+                        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                            <svg className="h-4 w-4 shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            {flash.success}
                         </div>
-                        <p className="shrink-0 text-sm text-gray-500">
-                            {schedules.total} entr{schedules.total !== 1 ? 'ies' : 'y'}
-                        </p>
+                    )}
+
+                    {/* Info banner */}
+                    <div className="rounded-xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-blue-700">
+                        <strong>How it works:</strong> Upload a Word (.docx) or PDF file for each semester.
+                        Students will see a download button on their Schedule page to get their timetable.
+                        Accepted formats: <span className="font-mono font-bold">.pdf .doc .docx</span>
                     </div>
 
-                    {/* Table */}
-                    <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Module</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Day</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Time</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Room</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Type</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Parity</th>
-                                        <th className="px-6 py-3" />
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 bg-white">
-                                    {schedules.data.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-400">
-                                                No schedules found.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        schedules.data.map((s) => (
-                                            <tr key={s.id} className="transition-colors hover:bg-gray-50">
-                                                <td className="px-6 py-4">
-                                                    <div className="text-sm font-medium text-gray-900">{s.module.name}</div>
-                                                    <div className="text-xs text-gray-400 font-mono">{s.module.code}</div>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-700">
-                                                    {DAY_LABELS[s.day]}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-700 font-mono">
-                                                    {formatTime(s.start_time)} – {formatTime(s.end_time)}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">{s.room}</td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${TYPE_COLORS[s.type]}`}>
-                                                        {TYPE_LABELS[s.type]}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-500">
-                                                    {PARITY_LABELS[s.week_parity]}
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <button
-                                                            onClick={() => setEditing(s)}
-                                                            className="rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setDeletingId(s.id)}
-                                                            className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                    {specializations.length === 0 ? (
+                        <div className="rounded-xl bg-white p-12 text-center text-sm text-gray-400 shadow-sm">
+                            No specializations found.
                         </div>
-
-                        {schedules.last_page > 1 && (
-                            <div className="border-t border-gray-100 px-6 py-4">
-                                <Pagination links={schedules.links} />
-                            </div>
-                        )}
-                    </div>
+                    ) : (
+                        specializations.map((spec, i) => (
+                            <SpecCard
+                                key={spec.id}
+                                spec={spec}
+                                color={SPEC_COLORS[i % SPEC_COLORS.length]}
+                            />
+                        ))
+                    )}
                 </div>
             </div>
         </AdminLayout>

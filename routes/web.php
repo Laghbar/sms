@@ -36,6 +36,7 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
+    Route::patch('/users/{user}', [AdminController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [AdminController::class, 'destroy'])->name('users.destroy');
     Route::get('/bulk-import', [BulkImportController::class, 'index'])->name('bulk-import.index');
     Route::post('/bulk-import', [BulkImportController::class, 'store'])->name('bulk-import.store');
@@ -51,9 +52,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::delete('/modules/{module}/students/{student}', [ModuleController::class, 'unenrollStudent'])->name('modules.students.unenroll');
 
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
-    Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
-    Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
-    Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
+    Route::post('/schedules/semesters/{semester}/upload', [ScheduleController::class, 'uploadTimetable'])->name('schedules.upload');
+    Route::delete('/schedules/semesters/{semester}/timetable', [ScheduleController::class, 'deleteTimetable'])->name('schedules.delete-timetable');
 
     // Results management (admin can edit grades + publish/unpublish)
     Route::get('/results',                              [AdminResultController::class, 'index'])->name('results.index');

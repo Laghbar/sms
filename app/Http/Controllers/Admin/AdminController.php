@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\Grade;
 use App\Models\Module;
+use App\Models\Semester;
 use App\Models\Specialization;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -57,7 +58,7 @@ class AdminController extends Controller
     {
         $query = User::query()
             ->whereNot('role', Role::Admin)
-            ->with(['specialization:id,name,code', 'semesterObj:id,name'])
+            ->with(['specialization:id,name,code', 'semesterObj:id,name', 'teachingModules:id,name,code,teacher_id'])
             ->when($request->search, fn ($q) =>
                 $q->where('name', 'like', "%{$request->search}%")
                   ->orWhere('email', 'like', "%{$request->search}%")
@@ -67,6 +68,9 @@ class AdminController extends Controller
             )
             ->when($request->specialization_id, fn ($q) =>
                 $q->where('specialization_id', $request->specialization_id)
+            )
+            ->when($request->semester_id, fn ($q) =>
+                $q->where('semester_id', $request->semester_id)
             )
             ->orderBy('created_at', 'desc');
 
@@ -79,20 +83,52 @@ class AdminController extends Controller
                 'email'          => $u->email,
                 'role'           => $u->role->value,
                 'created_at'     => $u->created_at->toDateString(),
-                'specialization' => $u->specialization
-                    ? ['name' => $u->specialization->name, 'code' => $u->specialization->code]
+                'specialization'   => $u->specialization
+                    ? ['id' => $u->specialization->id, 'name' => $u->specialization->name, 'code' => $u->specialization->code]
                     : null,
-                'semester'       => $u->semesterObj?->name,
+                'semester'         => $u->semesterObj?->name,
+                'semester_id'      => $u->semester_id,
+                'teaching_modules' => $u->isTeacher()
+                    ? $u->teachingModules->map(fn ($m) => ['id' => $m->id, 'name' => $m->name, 'code' => $m->code])->values()->toArray()
+                    : [],
             ];
         });
 
-        $specializations = Specialization::orderBy('name')->get(['id', 'name', 'code']);
+        $specializations = Specialization::with('semesters:id,specialization_id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+
+        $semesters = Semester::orderBy('name')->get(['id', 'specialization_id', 'name']);
 
         return Inertia::render('Admin/Users', [
             'users'           => $users,
-            'filters'         => $request->only('search', 'role', 'specialization_id'),
+            'filters'         => $request->only('search', 'role', 'specialization_id', 'semester_id'),
             'specializations' => $specializations,
+            'semesters'       => $semesters,
         ]);
+    }
+
+    public function update(Request $request, User $user): RedirectResponse
+    {
+        abort_if($user->isAdmin(), 403);
+
+        $validated = $request->validate([
+            'name'              => ['required', 'string', 'max:255'],
+            'specialization_id' => ['nullable', 'exists:specializations,id'],
+            'semester_id'       => ['nullable', 'exists:semesters,id'],
+        ]);
+
+        $user->update($validated);
+
+        // Auto-enrol student in the modules for the new specialization/semester
+        if ($user->isStudent() && $validated['specialization_id'] && $validated['semester_id']) {
+            Module::where('specialization_id', $validated['specialization_id'])
+                ->where('semester_id', $validated['semester_id'])
+                ->get()
+                ->each(fn ($m) => $m->students()->syncWithoutDetaching([$user->id]));
+        }
+
+        return back()->with('success', "User \"{$user->name}\" updated.");
     }
 
     public function destroy(User $user): RedirectResponse

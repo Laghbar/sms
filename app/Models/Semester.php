@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Semester extends Model
 {
-    protected $fillable = ['specialization_id', 'name'];
+    protected $fillable = ['specialization_id', 'name', 'timetable_path', 'timetable_name'];
 
     public function specialization(): BelongsTo
     {

@@ -3,80 +3,67 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Module;
-use App\Models\Schedule;
+use App\Models\Semester;
+use App\Models\Specialization;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ScheduleController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(): Response
     {
-        $schedules = Schedule::query()
-            ->with('module:id,name,code')
-            ->when($request->module_id, fn ($q) =>
-                $q->where('module_id', $request->module_id)
-            )
-            ->orderByRaw("CASE day
-                WHEN 'monday'    THEN 1
-                WHEN 'tuesday'   THEN 2
-                WHEN 'wednesday' THEN 3
-                WHEN 'thursday'  THEN 4
-                WHEN 'friday'    THEN 5
-                WHEN 'saturday'  THEN 6
-            END")
-            ->orderBy('start_time')
-            ->paginate(20)
-            ->withQueryString();
+        $specializations = Specialization::with(['semesters' => fn ($q) => $q->orderBy('name')])
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($spec) => [
+                'id'        => $spec->id,
+                'name'      => $spec->name,
+                'code'      => $spec->code,
+                'semesters' => $spec->semesters->map(fn ($sem) => [
+                    'id'             => $sem->id,
+                    'name'           => $sem->name,
+                    'has_timetable'  => (bool) $sem->timetable_path,
+                    'timetable_name' => $sem->timetable_name,
+                    'timetable_url'  => $sem->timetable_path
+                        ? Storage::url($sem->timetable_path)
+                        : null,
+                ]),
+            ]);
 
-        $modules = Module::orderBy('semester')->orderBy('name')->get(['id', 'name', 'code']);
-
-        return Inertia::render('Admin/Schedules', [
-            'schedules' => $schedules,
-            'modules'   => $modules,
-            'filters'   => $request->only('module_id'),
-        ]);
+        return Inertia::render('Admin/Schedules', ['specializations' => $specializations]);
     }
 
-    public function store(Request $request)
+    public function uploadTimetable(Request $request, Semester $semester)
     {
-        $validated = $request->validate([
-            'module_id'   => ['required', 'exists:modules,id'],
-            'day'         => ['required', 'in:monday,tuesday,wednesday,thursday,friday,saturday'],
-            'start_time'  => ['required', 'date_format:H:i'],
-            'end_time'    => ['required', 'date_format:H:i', 'after:start_time'],
-            'room'        => ['required', 'string', 'max:50'],
-            'type'        => ['required', 'in:cours,td,tp'],
-            'week_parity' => ['required', 'in:all,odd,even'],
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:20480'],
         ]);
 
-        Schedule::create($validated);
+        // Delete old file if exists
+        if ($semester->timetable_path) {
+            Storage::disk('public')->delete($semester->timetable_path);
+        }
 
-        return back()->with('success', 'Schedule created.');
-    }
+        $file = $request->file('file');
+        $path = $file->store("timetables", 'public');
 
-    public function update(Request $request, Schedule $schedule)
-    {
-        $validated = $request->validate([
-            'module_id'   => ['required', 'exists:modules,id'],
-            'day'         => ['required', 'in:monday,tuesday,wednesday,thursday,friday,saturday'],
-            'start_time'  => ['required', 'date_format:H:i'],
-            'end_time'    => ['required', 'date_format:H:i', 'after:start_time'],
-            'room'        => ['required', 'string', 'max:50'],
-            'type'        => ['required', 'in:cours,td,tp'],
-            'week_parity' => ['required', 'in:all,odd,even'],
+        $semester->update([
+            'timetable_path' => $path,
+            'timetable_name' => $file->getClientOriginalName(),
         ]);
 
-        $schedule->update($validated);
-
-        return back()->with('success', 'Schedule updated.');
+        return back()->with('success', "Timetable uploaded for {$semester->name}.");
     }
 
-    public function destroy(Schedule $schedule)
+    public function deleteTimetable(Semester $semester)
     {
-        $schedule->delete();
+        if ($semester->timetable_path) {
+            Storage::disk('public')->delete($semester->timetable_path);
+            $semester->update(['timetable_path' => null, 'timetable_name' => null]);
+        }
 
-        return back()->with('success', 'Schedule deleted.');
+        return back()->with('success', "Timetable removed from {$semester->name}.");
     }
 }

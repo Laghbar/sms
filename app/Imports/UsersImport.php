@@ -37,20 +37,25 @@ class UsersImport implements ToCollection, WithHeadingRow, WithValidation
             );
 
             if ($this->role === 'student') {
-                $code = strtoupper(trim($row['specialization'] ?? ''));
+                $code    = strtoupper(trim($row['specialization'] ?? ''));
+                $semName = strtoupper(trim($row['semester'] ?? ''));
 
                 if ($code !== '') {
                     $spec = Specialization::where('code', $code)->first();
 
                     if ($spec) {
-                        $semester = $spec->semesters()->orderBy('name')->first();
-
-                        $user->update([
-                            'specialization_id' => $spec->id,
-                            'semester_id'       => $semester?->id,
-                        ]);
+                        // Use the exact semester name if provided (e.g. S2, S4),
+                        // otherwise fall back to the first semester (S1).
+                        $semester = $semName !== ''
+                            ? $spec->semesters()->where('name', $semName)->first()
+                            : $spec->semesters()->orderBy('name')->first();
 
                         if ($semester) {
+                            $user->update([
+                                'specialization_id' => $spec->id,
+                                'semester_id'       => $semester->id,
+                            ]);
+
                             Module::where('specialization_id', $spec->id)
                                 ->where('semester_id', $semester->id)
                                 ->get()
@@ -73,6 +78,7 @@ class UsersImport implements ToCollection, WithHeadingRow, WithValidation
 
         if ($this->role === 'student') {
             $rules['*.specialization'] = ['nullable', 'string', 'max:20'];
+            $rules['*.semester']       = ['nullable', 'string', 'max:10'];
         }
 
         return $rules;

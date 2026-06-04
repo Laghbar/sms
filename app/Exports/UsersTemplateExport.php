@@ -25,7 +25,7 @@ class UsersTemplateExport implements FromArray, WithHeadings, WithStyles, Should
     public function headings(): array
     {
         if ($this->role === 'student') {
-            return ['name', 'email', 'password', 'specialization'];
+            return ['name', 'email', 'password', 'specialization', 'semester'];
         }
 
         return ['name', 'email', 'password'];
@@ -34,40 +34,47 @@ class UsersTemplateExport implements FromArray, WithHeadings, WithStyles, Should
     public function array(): array
     {
         if ($this->role === 'student') {
-            $codes = Specialization::orderBy('name')->pluck('code')->toArray();
-            $note  = count($codes) > 0
-                ? 'Available codes: ' . implode(', ', $codes)
-                : 'e.g. GI';
+            // Build reference from DB
+            $specs = Specialization::with(['semesters' => fn ($q) => $q->orderBy('name')])
+                ->orderBy('name')->get();
+
+            $specCodes = $specs->pluck('code')->toArray();
+            $firstCode = $specCodes[0] ?? 'GI';
+
+            // All semester names across all specializations
+            $allSemesters = $specs->flatMap(fn ($s) => $s->semesters->pluck('name'))->unique()->sort()->values();
+            $semNote = $allSemesters->isNotEmpty()
+                ? 'e.g. ' . $allSemesters->implode(', ')
+                : 'e.g. S1, S2, S3, S4';
 
             return [
-                ['Ali Bensalem',   'ali@example.com',   'Pass123!', $codes[0] ?? 'GI'],
-                ['Sara Khaldi',    'sara@example.com',  '',         $codes[0] ?? 'GI'],
-                ['Yacine Amari',   'yacine@example.com','',         ''],
-                // Informational row
-                ['', '', '← leave blank to auto-generate', '← ' . $note],
+                ['Ali Bensalem',   'ali@example.com',   'Pass123!', $firstCode, 'S2'],
+                ['Sara Khaldi',    'sara@example.com',  '',         $firstCode, 'S2'],
+                ['Yacine Amari',   'yacine@example.com','',         $firstCode, 'S4'],
+                ['', '', '← auto-generated if blank',
+                    '← ' . implode(', ', $specCodes),
+                    '← ' . $semNote],
             ];
         }
 
         return [
-            ['Dr. Ahmed Benali',  'ahmed@example.com',  'Pass123!'],
-            ['Prof. Sara Meziani','sara@example.com',    ''],
-            ['', '', '← leave blank to auto-generate'],
+            ['Dr. Ahmed Benali',   'ahmed@example.com',  'Pass123!'],
+            ['Prof. Sara Meziani', 'sara@example.com',   ''],
+            ['', '', '← auto-generated if blank'],
         ];
     }
 
     public function styles(Worksheet $sheet): void
     {
-        $lastCol     = $this->role === 'student' ? 'D' : 'C';
+        $lastCol     = $this->role === 'student' ? 'E' : 'C';
         $lastDataRow = $this->role === 'student' ? 5 : 4;
 
-        // Header row — dark background, white bold text
         $sheet->getStyle("A1:{$lastCol}1")->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4338CA']],
+            'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
+            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4338CA']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
 
-        // Data rows — light alternating background
         for ($row = 2; $row <= $lastDataRow - 1; $row++) {
             $bg = $row % 2 === 0 ? 'F5F3FF' : 'FFFFFF';
             $sheet->getStyle("A{$row}:{$lastCol}{$row}")->applyFromArray([
@@ -75,21 +82,18 @@ class UsersTemplateExport implements FromArray, WithHeadings, WithStyles, Should
             ]);
         }
 
-        // Note row — italic gray
         $sheet->getStyle("A{$lastDataRow}:{$lastCol}{$lastDataRow}")->applyFromArray([
             'font'      => ['italic' => true, 'color' => ['rgb' => '9CA3AF'], 'size' => 9],
             'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F9FAFB']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT],
         ]);
 
-        // Border around all cells
         $sheet->getStyle("A1:{$lastCol}{$lastDataRow}")->applyFromArray([
             'borders' => [
                 'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'E5E7EB']],
             ],
         ]);
 
-        // Freeze the header row
         $sheet->freezePane('A2');
     }
 }

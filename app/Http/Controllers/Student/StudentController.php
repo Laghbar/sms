@@ -170,7 +170,8 @@ class StudentController extends Controller
 
     public function schedule(Request $request): Response
     {
-        $moduleIds = $request->user()->enrolledModules()->pluck('modules.id');
+        $student   = $request->user();
+        $moduleIds = $student->enrolledModules()->pluck('modules.id');
 
         $schedules = Schedule::whereIn('module_id', $moduleIds)
             ->with('module:id,name,code')
@@ -178,7 +179,22 @@ class StudentController extends Controller
             ->orderBy('start_time')
             ->get();
 
-        return Inertia::render('Student/Schedule', ['schedules' => $schedules]);
+        // Timetable file for this student's semester
+        $timetable = null;
+        if ($student->semester_id) {
+            $sem = \App\Models\Semester::find($student->semester_id);
+            if ($sem && $sem->timetable_path) {
+                $timetable = [
+                    'name' => $sem->timetable_name,
+                    'url'  => \Illuminate\Support\Facades\Storage::url($sem->timetable_path),
+                ];
+            }
+        }
+
+        return Inertia::render('Student/Schedule', [
+            'schedules' => $schedules,
+            'timetable' => $timetable,
+        ]);
     }
 
     public function tps(Request $request): Response
