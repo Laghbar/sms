@@ -13,17 +13,11 @@ function RoleCard({ role, label, description, icon, color, selected, onSelect })
                     : 'border-gray-200 bg-white hover:border-gray-300'
             }`}
         >
-            <div
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl ${
-                    selected ? `bg-${color}-100` : 'bg-gray-100'
-                }`}
-            >
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl ${selected ? `bg-${color}-100` : 'bg-gray-100'}`}>
                 {icon}
             </div>
             <div>
-                <p className={`font-semibold ${selected ? `text-${color}-700` : 'text-gray-800'}`}>
-                    {label}
-                </p>
+                <p className={`font-semibold ${selected ? `text-${color}-700` : 'text-gray-800'}`}>{label}</p>
                 <p className="mt-0.5 text-sm text-gray-500">{description}</p>
             </div>
             {selected && (
@@ -37,7 +31,7 @@ function RoleCard({ role, label, description, icon, color, selected, onSelect })
     );
 }
 
-export default function BulkImport() {
+export default function BulkImport({ specializations = [] }) {
     const { flash } = usePage().props;
     const [selectedRole, setSelectedRole] = useState(null);
     const { data, setData, post, processing, errors, reset, progress } = useForm({
@@ -66,22 +60,19 @@ export default function BulkImport() {
         });
     }
 
-    const exampleHeaders = ['name', 'email', 'password'];
+    const isStudent = selectedRole === 'student';
+
+    const exampleHeaders = isStudent
+        ? ['name', 'email', 'password', 'specialization']
+        : ['name', 'email', 'password'];
 
     return (
-        <AdminLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Bulk Import Users
-                </h2>
-            }
-        >
+        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Bulk Import Users</h2>}>
             <Head title="Bulk Import" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-3xl space-y-6 px-4 sm:px-6 lg:px-8">
 
-                    {/* Success message */}
                     {flash?.success && (
                         <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">
                             <div className="flex items-center gap-2">
@@ -94,70 +85,87 @@ export default function BulkImport() {
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
+
                         {/* Step 1: Select Role */}
                         <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h3 className="mb-1 text-base font-semibold text-gray-900">
-                                Step 1 — Select user type
-                            </h3>
-                            <p className="mb-4 text-sm text-gray-500">
-                                Choose the role for the users you are importing.
-                            </p>
+                            <h3 className="mb-1 text-base font-semibold text-gray-900">Step 1 — Select user type</h3>
+                            <p className="mb-4 text-sm text-gray-500">Choose the role for the users you are importing.</p>
 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <RoleCard
-                                    role="teacher"
-                                    label="Teachers"
+                                    role="teacher" label="Teachers"
                                     description="Import teaching staff accounts"
-                                    icon="👩‍🏫"
-                                    color="blue"
+                                    icon="👩‍🏫" color="blue"
                                     selected={selectedRole === 'teacher'}
                                     onSelect={handleRoleSelect}
                                 />
                                 <RoleCard
-                                    role="student"
-                                    label="Students"
+                                    role="student" label="Students"
                                     description="Import student accounts"
-                                    icon="🎓"
-                                    color="green"
+                                    icon="🎓" color="green"
                                     selected={selectedRole === 'student'}
                                     onSelect={handleRoleSelect}
                                 />
                             </div>
 
-                            {errors.role && (
-                                <p className="mt-2 text-sm text-red-600">{errors.role}</p>
-                            )}
+                            {errors.role && <p className="mt-2 text-sm text-red-600">{errors.role}</p>}
                         </div>
 
                         {/* Step 2: Upload File */}
                         <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h3 className="mb-1 text-base font-semibold text-gray-900">
-                                Step 2 — Upload Excel file
-                            </h3>
+                            <h3 className="mb-1 text-base font-semibold text-gray-900">Step 2 — Upload Excel file</h3>
                             <p className="mb-4 text-sm text-gray-500">
                                 Accepted formats: <span className="font-medium">.xlsx, .xls, .csv</span>. Max size: 10 MB.
                             </p>
 
-                            {/* Expected format hint */}
+                            {/* Expected columns hint */}
                             <div className="mb-4 rounded-lg bg-gray-50 p-4">
                                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
                                     Expected columns (first row = header)
                                 </p>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     {exampleHeaders.map((h) => (
                                         <span
                                             key={h}
-                                            className="rounded bg-white px-2 py-1 text-xs font-mono border border-gray-200 text-gray-700"
+                                            className={`rounded border px-2 py-1 font-mono text-xs ${
+                                                h === 'specialization'
+                                                    ? 'border-indigo-300 bg-indigo-100 text-indigo-700 font-semibold'
+                                                    : 'border-gray-200 bg-white text-gray-700'
+                                            }`}
                                         >
                                             {h}
                                         </span>
                                     ))}
                                 </div>
+
                                 <p className="mt-2 text-xs text-gray-400">
-                                    <em>password</em> is optional — a random one is generated if omitted.
+                                    <em>password</em> is optional — a random one is generated automatically if omitted.
                                 </p>
+
+                                {/* Specialization codes — only for students */}
+                                {isStudent && specializations.length > 0 && (
+                                    <div className="mt-3 border-t border-gray-200 pt-3">
+                                        <p className="mb-1.5 text-xs font-semibold text-gray-500">
+                                            Available <span className="font-mono">specialization</span> codes:
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {specializations.map((s) => (
+                                                <div key={s.id} className="flex items-center gap-1.5">
+                                                    <span className="rounded bg-indigo-600 px-1.5 py-0.5 font-mono text-xs font-bold text-white">
+                                                        {s.code}
+                                                    </span>
+                                                    <span className="text-xs text-gray-600">{s.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p className="mt-1.5 text-xs text-gray-400">
+                                            Leave blank to import without academic assignment.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
+                            {/* File drop zone */}
                             <label
                                 htmlFor="file-input"
                                 className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition ${
@@ -167,15 +175,14 @@ export default function BulkImport() {
                                 }`}
                             >
                                 <svg className="mb-3 h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                 </svg>
                                 {data.file ? (
                                     <p className="text-sm font-medium text-indigo-700">{data.file.name}</p>
                                 ) : (
                                     <>
-                                        <p className="text-sm font-medium text-gray-700">
-                                            Click to upload or drag & drop
-                                        </p>
+                                        <p className="text-sm font-medium text-gray-700">Click to upload or drag &amp; drop</p>
                                         <p className="text-xs text-gray-400">XLSX, XLS, CSV</p>
                                     </>
                                 )}
@@ -197,9 +204,7 @@ export default function BulkImport() {
                                 </div>
                             )}
 
-                            {errors.file && (
-                                <p className="mt-2 text-sm text-red-600">{errors.file}</p>
-                            )}
+                            {errors.file && <p className="mt-2 text-sm text-red-600">{errors.file}</p>}
                         </div>
 
                         {/* Submit */}

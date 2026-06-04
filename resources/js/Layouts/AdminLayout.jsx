@@ -1,3 +1,4 @@
+import NotificationBell from '@/Components/NotificationBell';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
@@ -54,6 +55,18 @@ export default function AdminLayout({ header, children }) {
                                     Schedules
                                 </NavLink>
                                 <NavLink
+                                    href={route('admin.results.index')}
+                                    active={route().current('admin.results.*')}
+                                >
+                                    Results
+                                </NavLink>
+                                <NavLink
+                                    href={route('admin.exams.index')}
+                                    active={route().current('admin.exams.index')}
+                                >
+                                    Exams
+                                </NavLink>
+                                <NavLink
                                     href={route('admin.events.index')}
                                     active={route().current('admin.events.index')}
                                 >
@@ -69,8 +82,9 @@ export default function AdminLayout({ header, children }) {
                             </div>
                         </div>
 
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <span className="me-3 inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
+                        <div className="hidden sm:ms-6 sm:flex sm:items-center gap-2">
+                            <NotificationBell />
+                            <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
                                 Admin
                             </span>
                             <div className="relative ms-3">
@@ -169,6 +183,18 @@ export default function AdminLayout({ header, children }) {
                             active={route().current('admin.schedules.index')}
                         >
                             Schedules
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('admin.results.index')}
+                            active={route().current('admin.results.*')}
+                        >
+                            Results
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('admin.exams.index')}
+                            active={route().current('admin.exams.index')}
+                        >
+                            Exams
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             href={route('admin.events.index')}

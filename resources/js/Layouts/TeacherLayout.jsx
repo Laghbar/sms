@@ -1,3 +1,4 @@
+import NotificationBell from '@/Components/NotificationBell';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
@@ -25,6 +26,7 @@ export default function TeacherLayout({ header, children }) {
                                 <NavLink href={route('teacher.dashboard')} active={route().current('teacher.dashboard')}>Dashboard</NavLink>
                                 <NavLink href={route('teacher.modules')}   active={route().current('teacher.modules')}>My Modules</NavLink>
                                 <NavLink href={route('teacher.schedule')}  active={route().current('teacher.schedule')}>Schedule</NavLink>
+                                <NavLink href={route('teacher.results.index')} active={route().current('teacher.results.index')}>Results</NavLink>
                                 <NavLink href={route('teacher.tps.index')}    active={route().current('teacher.tps.index')}>TPs</NavLink>
                                 <NavLink href={route('teacher.events.index')} active={route().current('teacher.events.index')}>
                                     <span className="relative">
@@ -39,7 +41,8 @@ export default function TeacherLayout({ header, children }) {
                             </div>
                         </div>
 
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center gap-3">
+                        <div className="hidden sm:ms-6 sm:flex sm:items-center gap-2">
+                            <NotificationBell />
                             <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">Teacher</span>
                             <Dropdown>
                                 <Dropdown.Trigger>
@@ -73,6 +76,7 @@ export default function TeacherLayout({ header, children }) {
                         <ResponsiveNavLink href={route('teacher.dashboard')} active={route().current('teacher.dashboard')}>Dashboard</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.modules')}   active={route().current('teacher.modules')}>My Modules</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.schedule')}  active={route().current('teacher.schedule')}>Schedule</ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('teacher.results.index')} active={route().current('teacher.results.index')}>Results</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.tps.index')}    active={route().current('teacher.tps.index')}>TPs</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.events.index')} active={route().current('teacher.events.index')}>
                             Events {new_events_count > 0 && <span className="ms-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{new_events_count > 9 ? '9+' : new_events_count}</span>}

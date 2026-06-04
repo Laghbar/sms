@@ -1,3 +1,4 @@
+import NotificationBell from '@/Components/NotificationBell';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
@@ -39,7 +40,8 @@ export default function StudentLayout({ header, children }) {
                             </div>
                         </div>
 
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center gap-3">
+                        <div className="hidden sm:ms-6 sm:flex sm:items-center gap-2">
+                            <NotificationBell />
                             <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Student</span>
                             <Dropdown>
                                 <Dropdown.Trigger>

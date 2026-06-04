@@ -2,19 +2,42 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\UsersTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Imports\UsersImport;
+use App\Models\Specialization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class BulkImportController extends Controller
 {
     public function index(): Response
     {
-        return Inertia::render('Admin/BulkImport');
+        $specializations = Specialization::with('semesters:id,specialization_id,name')
+            ->get(['id', 'name', 'code'])
+            ->map(fn ($s) => [
+                'id'        => $s->id,
+                'name'      => $s->name,
+                'code'      => $s->code,
+                'semesters' => $s->semesters->pluck('name'),
+            ]);
+
+        return Inertia::render('Admin/BulkImport', [
+            'specializations' => $specializations,
+        ]);
+    }
+
+    public function downloadTemplate(string $role): BinaryFileResponse
+    {
+        abort_if(! in_array($role, ['student', 'teacher']), 404);
+
+        $filename = "import_template_{$role}s.xlsx";
+
+        return Excel::download(new UsersTemplateExport($role), $filename);
     }
 
     public function store(Request $request): RedirectResponse

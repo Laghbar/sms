@@ -45,6 +45,17 @@ class HandleInertiaRequests extends Middleware
                     fn ($q) => $q->where('created_at', '>', $request->user()->events_last_seen_at)
                 )->count()
                 : 0,
+            'notifications'              => $request->user()
+                ? $request->user()->unreadNotifications()->latest()->limit(8)->get()
+                    ->map(fn ($n) => [
+                        'id'         => $n->id,
+                        'data'       => $n->data,
+                        'created_at' => $n->created_at->diffForHumans(),
+                    ])->toArray()
+                : [],
+            'unread_notifications_count' => $request->user()
+                ? $request->user()->unreadNotifications()->count()
+                : 0,
         ];
     }
 }
