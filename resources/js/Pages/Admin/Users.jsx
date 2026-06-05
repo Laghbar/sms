@@ -77,54 +77,96 @@ function Pagination({ links }) {
 }
 
 /* ── Create Student modal ────────────────────────────────────────────── */
-function CreateStudentModal({ specializations, semesters, onClose }) {
+function CreateUserModal({ specializations, semesters, modules, onClose }) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        name:              '',
-        email:             '',
-        password:          '',
+        role:                  'student',
+        name:                  '',
+        email:                 '',
+        password:              '',
         password_confirmation: '',
-        specialization_id: '',
-        semester_id:       '',
+        // student
+        specialization_id:     '',
+        semester_id:           '',
+        // teacher
+        module_ids:            [],
     });
+
+    const isStudent = data.role === 'student';
 
     const filteredSemesters = data.specialization_id
         ? semesters.filter((s) => String(s.specialization_id) === String(data.specialization_id))
         : [];
 
+    function handleRoleChange(role) {
+        setData((prev) => ({ ...prev, role, specialization_id: '', semester_id: '', module_ids: [] }));
+    }
+
     function handleSpecChange(val) {
         setData((prev) => ({ ...prev, specialization_id: val, semester_id: '' }));
     }
 
+    function toggleModule(id) {
+        setData('module_ids', data.module_ids.includes(id)
+            ? data.module_ids.filter((x) => x !== id)
+            : [...data.module_ids, id]
+        );
+    }
+
     function submit(e) {
         e.preventDefault();
-        post(route('admin.users.store'), {
-            onSuccess: () => { reset(); onClose(); },
-        });
+        post(route('admin.users.store'), { onSuccess: () => { reset(); onClose(); } });
     }
 
     const field = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400';
+    const roleBtn = (r, label, color) =>
+        `flex-1 rounded-lg py-2 text-sm font-semibold transition border ${
+            data.role === r
+                ? `${color} text-white border-transparent shadow-sm`
+                : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50'
+        }`;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
-            <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-                <h3 className="mb-1 text-base font-semibold text-gray-900">Create Student</h3>
-                <p className="mb-5 text-xs text-gray-400">The student will be automatically enrolled in all modules of the selected semester.</p>
+            <div className={`w-full ${isStudent ? 'max-w-md' : 'max-w-lg'} flex flex-col max-h-[90vh] rounded-xl bg-white shadow-xl`} onClick={(e) => e.stopPropagation()}>
+                {/* Fixed header */}
+                <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+                    <h3 className="text-base font-semibold text-gray-900">Add New User</h3>
+                </div>
 
-                <form onSubmit={submit} className="space-y-4">
+                <form onSubmit={submit} className="flex flex-col flex-1 min-h-0">
+                {/* Scrollable body */}
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                    {/* Role toggle */}
+                    <div className="flex gap-2">
+                        <button type="button" className={roleBtn('student', 'Student', 'bg-emerald-600')}
+                            onClick={() => handleRoleChange('student')}>
+                            Student
+                        </button>
+                        <button type="button" className={roleBtn('teacher', 'Teacher', 'bg-blue-600')}
+                            onClick={() => handleRoleChange('teacher')}>
+                            Teacher
+                        </button>
+                    </div>
+
+                    {/* Name */}
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">Full Name</label>
                         <input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)}
-                            placeholder="e.g. Ahmed Benali" className={field} autoFocus />
+                            placeholder={isStudent ? 'e.g. Ahmed Benali' : 'e.g. Dr. Kamel Bouzidi'}
+                            className={field} autoFocus />
                         {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
                     </div>
 
+                    {/* Email */}
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
                         <input type="email" value={data.email} onChange={(e) => setData('email', e.target.value)}
-                            placeholder="student@sms.com" className={field} />
+                            placeholder={isStudent ? 'student@sms.com' : 'teacher@sms.com'}
+                            className={field} />
                         {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
                     </div>
 
+                    {/* Password */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="mb-1 block text-sm font-medium text-gray-700">Password</label>
@@ -133,50 +175,90 @@ function CreateStudentModal({ specializations, semesters, onClose }) {
                             {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
                         </div>
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Confirm Password</label>
+                            <label className="mb-1 block text-sm font-medium text-gray-700">Confirm</label>
                             <input type="password" value={data.password_confirmation} onChange={(e) => setData('password_confirmation', e.target.value)}
                                 placeholder="Repeat password" className={field} />
                         </div>
                     </div>
 
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">Specialization</label>
-                        <select value={data.specialization_id} onChange={(e) => handleSpecChange(e.target.value)} className={field}>
-                            <option value="">— Select specialization —</option>
-                            {specializations.map((s) => (
-                                <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
-                            ))}
-                        </select>
-                        {errors.specialization_id && <p className="mt-1 text-xs text-red-500">{errors.specialization_id}</p>}
-                    </div>
+                    {/* ── Student fields ── */}
+                    {isStudent && (
+                        <>
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Specialization</label>
+                                <select value={data.specialization_id} onChange={(e) => handleSpecChange(e.target.value)} className={field}>
+                                    <option value="">— Select specialization —</option>
+                                    {specializations.map((s) => (
+                                        <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
+                                    ))}
+                                </select>
+                                {errors.specialization_id && <p className="mt-1 text-xs text-red-500">{errors.specialization_id}</p>}
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Semester</label>
+                                <select value={data.semester_id} onChange={(e) => setData('semester_id', e.target.value)}
+                                    className={field} disabled={!data.specialization_id}>
+                                    <option value="">— Select semester —</option>
+                                    {filteredSemesters.map((s) => (
+                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                </select>
+                                {errors.semester_id && <p className="mt-1 text-xs text-red-500">{errors.semester_id}</p>}
+                                {data.specialization_id && data.semester_id && (
+                                    <p className="mt-1 text-xs text-indigo-500">
+                                        Student will be auto-enrolled in all modules for this semester.
+                                    </p>
+                                )}
+                            </div>
+                        </>
+                    )}
 
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">Semester</label>
-                        <select value={data.semester_id} onChange={(e) => setData('semester_id', e.target.value)}
-                            className={field} disabled={!data.specialization_id}>
-                            <option value="">— Select semester —</option>
-                            {filteredSemesters.map((s) => (
-                                <option key={s.id} value={s.id}>{s.name}</option>
-                            ))}
-                        </select>
-                        {errors.semester_id && <p className="mt-1 text-xs text-red-500">{errors.semester_id}</p>}
-                        {data.specialization_id && data.semester_id && (
-                            <p className="mt-1 text-xs text-indigo-500">
-                                Student will be auto-enrolled in all modules for this semester.
-                            </p>
-                        )}
-                    </div>
+                    {/* ── Teacher fields ── */}
+                    {!isStudent && (
+                        <div>
+                            <label className="mb-2 block text-sm font-medium text-gray-700">
+                                Assign Modules
+                                <span className="ml-1 text-xs font-normal text-gray-400">
+                                    ({data.module_ids.length} selected)
+                                </span>
+                            </label>
+                            <div className="max-h-52 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
+                                {modules.length === 0 ? (
+                                    <p className="px-3 py-4 text-center text-xs text-gray-400">No modules available.</p>
+                                ) : (
+                                    modules.map((m) => {
+                                        const checked = data.module_ids.includes(m.id);
+                                        return (
+                                            <label key={m.id}
+                                                className={`flex cursor-pointer items-center gap-3 px-3 py-2 transition hover:bg-gray-50 ${checked ? 'bg-blue-50' : ''}`}>
+                                                <input type="checkbox" checked={checked} onChange={() => toggleModule(m.id)}
+                                                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                                <span className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-blue-700">
+                                                    {m.code}
+                                                </span>
+                                                <span className="text-sm text-gray-700">{m.name}</span>
+                                            </label>
+                                        );
+                                    })
+                                )}
+                            </div>
+                            {errors.module_ids && <p className="mt-1 text-xs text-red-500">{errors.module_ids}</p>}
+                        </div>
+                    )}
 
-                    <div className="flex justify-end gap-3 pt-2">
-                        <button type="button" onClick={onClose}
-                            className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                            Cancel
-                        </button>
-                        <button type="submit" disabled={processing}
-                            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60">
-                            {processing ? 'Creating…' : 'Create Student'}
-                        </button>
-                    </div>
+                </div>
+
+                {/* Fixed footer — always visible */}
+                <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
+                    <button type="button" onClick={onClose}
+                        className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" disabled={processing}
+                        className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60 ${isStudent ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                        {processing ? 'Creating…' : `Create ${isStudent ? 'Student' : 'Teacher'}`}
+                    </button>
+                </div>
                 </form>
             </div>
         </div>
@@ -409,9 +491,10 @@ export default function Users({ users, filters, specializations = [], semesters 
             <Head title="Users" />
 
             {creating && (
-                <CreateStudentModal
+                <CreateUserModal
                     specializations={specializations}
                     semesters={semesters}
+                    modules={modules}
                     onClose={() => setCreating(false)}
                 />
             )}
@@ -525,7 +608,7 @@ export default function Users({ users, filters, specializations = [], semesters 
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                                 </svg>
-                                New Student
+                                New User
                             </button>
                         </div>
                     </div>

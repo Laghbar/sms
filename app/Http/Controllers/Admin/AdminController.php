@@ -116,31 +116,53 @@ class AdminController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name'              => ['required', 'string', 'max:255'],
-            'email'             => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password'          => ['required', 'string', 'min:8', 'confirmed'],
-            'specialization_id' => ['required', 'exists:specializations,id'],
-            'semester_id'       => ['required', 'exists:semesters,id'],
-        ]);
+        $role = $request->input('role', 'student');
+        abort_if(! in_array($role, ['student', 'teacher']), 422);
 
-        $student = User::create([
+        $rules = [
+            'role'     => ['required', 'in:student,teacher'],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ];
+
+        if ($role === 'student') {
+            $rules['specialization_id'] = ['required', 'exists:specializations,id'];
+            $rules['semester_id']       = ['required', 'exists:semesters,id'];
+        } else {
+            $rules['module_ids']   = ['nullable', 'array'];
+            $rules['module_ids.*'] = ['exists:modules,id'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $user = User::create([
             'name'              => $validated['name'],
             'email'             => $validated['email'],
             'password'          => \Illuminate\Support\Facades\Hash::make($validated['password']),
-            'role'              => Role::Student,
+            'role'              => $role === 'student' ? Role::Student : Role::Teacher,
             'email_verified_at' => now(),
-            'specialization_id' => $validated['specialization_id'],
-            'semester_id'       => $validated['semester_id'],
+            'specialization_id' => $validated['specialization_id'] ?? null,
+            'semester_id'       => $validated['semester_id'] ?? null,
         ]);
 
-        // Auto-enroll in all modules for the chosen specialization + semester
-        Module::where('specialization_id', $validated['specialization_id'])
-            ->where('semester_id', $validated['semester_id'])
-            ->get()
-            ->each(fn ($m) => $m->students()->syncWithoutDetaching([$student->id]));
+        if ($role === 'student') {
+            Module::where('specialization_id', $validated['specialization_id'])
+                ->where('semester_id', $validated['semester_id'])
+                ->get()
+                ->each(fn ($m) => $m->students()->syncWithoutDetaching([$user->id]));
 
-        return back()->with('success', "Student \"{$student->name}\" created and enrolled in modules.");
+            return back()->with('success', "Student \"{$user->name}\" created and enrolled in modules.");
+        }
+
+        // Teacher — assign selected modules
+        $moduleIds = $validated['module_ids'] ?? [];
+        if ($moduleIds) {
+            Module::whereIn('id', $moduleIds)->update(['teacher_id' => $user->id]);
+            $user->taughtModules()->sync($moduleIds);
+        }
+
+        return back()->with('success', "Teacher \"{$user->name}\" created.");
     }
 
     public function update(Request $request, User $user): RedirectResponse

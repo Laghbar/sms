@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BulkImportController;
+use App\Http\Controllers\Admin\SpecializationController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\ExamController;
@@ -56,6 +57,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
     Route::post('/schedules/semesters/{semester}/upload', [ScheduleController::class, 'uploadTimetable'])->name('schedules.upload');
     Route::delete('/schedules/semesters/{semester}/timetable', [ScheduleController::class, 'deleteTimetable'])->name('schedules.delete-timetable');
+
+    Route::post('/specializations', [SpecializationController::class, 'store'])->name('specializations.store');
+    Route::delete('/specializations/{specialization}', [SpecializationController::class, 'destroy'])->name('specializations.destroy');
 
     // Results management (admin can edit grades + publish/unpublish)
     Route::get('/results',                              [AdminResultController::class, 'index'])->name('results.index');
