@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\Module;
+use App\Models\Semester;
 use App\Models\Specialization;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -15,43 +16,45 @@ class ModuleController extends Controller
 {
     public function index(Request $request): Response
     {
-        $modules = Module::query()
-            ->with(['teacher:id,name', 'specialization:id,name,code', 'semesterObj:id,name'])
-            ->withCount(['students', 'schedules'])
-            ->when($request->search, fn ($q) =>
-                $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('code', 'like', "%{$request->search}%")
-            )
+        $specId  = $request->specialization_id;
+        $semId   = $request->semester_id;
+
+        // Only query modules when both filters are chosen
+        $modules = null;
+        if ($specId && $semId) {
+            $modules = Module::query()
+                ->with(['teacher:id,name'])
+                ->withCount(['students', 'schedules'])
+                ->where('specialization_id', $specId)
+                ->where('semester_id', $semId)
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Module $m) => [
+                    'id'              => $m->id,
+                    'name'            => $m->name,
+                    'code'            => $m->code,
+                    'coefficient'     => $m->coefficient,
+                    'description'     => $m->description,
+                    'teacher_id'      => $m->teacher_id,
+                    'teacher_name'    => $m->teacher?->name,
+                    'is_published'    => $m->is_published,
+                    'students_count'  => $m->students_count,
+                    'semester_id'     => $m->semester_id,
+                    'specialization_id' => $m->specialization_id,
+                ]);
+        }
+
+        $teachers = User::where('role', Role::Teacher)->orderBy('name')->get(['id', 'name']);
+
+        $specializations = Specialization::with(['semesters' => fn ($q) => $q->orderBy('name')])
             ->orderBy('name')
-            ->paginate(15)
-            ->withQueryString();
-
-        // Flatten relationship data for Inertia
-        $modules->getCollection()->transform(fn (Module $m) => [
-            'id'             => $m->id,
-            'name'           => $m->name,
-            'code'           => $m->code,
-            'semester'       => $m->semester,
-            'coefficient'    => $m->coefficient,
-            'description'    => $m->description,
-            'teacher_id'     => $m->teacher_id,
-            'teacher_name'   => $m->teacher?->name,
-            'specialization_id'   => $m->specialization_id,
-            'specialization_name' => $m->specialization?->name,
-            'specialization_code' => $m->specialization?->code,
-            'is_published'   => $m->is_published,
-            'students_count' => $m->students_count,
-            'schedules_count'=> $m->schedules_count,
-        ]);
-
-        $teachers        = User::where('role', Role::Teacher)->orderBy('name')->get(['id', 'name']);
-        $specializations = Specialization::orderBy('name')->get(['id', 'name', 'code']);
+            ->get(['id', 'name', 'code']);
 
         return Inertia::render('Admin/Modules', [
-            'modules'         => $modules,
+            'modules'         => $modules,        // null = nothing selected yet
             'teachers'        => $teachers,
             'specializations' => $specializations,
-            'filters'         => $request->only('search'),
+            'filters'         => $request->only('specialization_id', 'semester_id'),
         ]);
     }
 
@@ -61,11 +64,15 @@ class ModuleController extends Controller
             'name'              => ['required', 'string', 'max:255'],
             'code'              => ['required', 'string', 'max:50', 'unique:modules,code'],
             'coefficient'       => ['required', 'integer', 'min:1', 'max:10'],
-            'semester'          => ['required', 'integer', 'min:1', 'max:10'],
-            'description'       => ['nullable', 'string', 'max:1000'],
+            'specialization_id' => ['required', 'exists:specializations,id'],
+            'semester_id'       => ['required', 'exists:semesters,id'],
             'teacher_id'        => ['nullable', 'exists:users,id'],
-            'specialization_id' => ['nullable', 'exists:specializations,id'],
+            'description'       => ['nullable', 'string', 'max:1000'],
         ]);
+
+        // Derive legacy semester integer from semester name (S1→1, S2→2 …)
+        $semName = Semester::find($validated['semester_id'])?->name ?? 'S1';
+        $validated['semester'] = (int) preg_replace('/\D/', '', $semName) ?: 1;
 
         $module = Module::create($validated);
 
@@ -73,7 +80,7 @@ class ModuleController extends Controller
             $module->teachers()->syncWithoutDetaching([$validated['teacher_id']]);
         }
 
-        return back()->with('success', 'Module created.');
+        return back()->with('success', "Module \"{$module->name}\" created.");
     }
 
     public function update(Request $request, Module $module)
@@ -82,28 +89,32 @@ class ModuleController extends Controller
             'name'              => ['required', 'string', 'max:255'],
             'code'              => ['required', 'string', 'max:50', "unique:modules,code,{$module->id}"],
             'coefficient'       => ['required', 'integer', 'min:1', 'max:10'],
-            'semester'          => ['required', 'integer', 'min:1', 'max:10'],
-            'description'       => ['nullable', 'string', 'max:1000'],
+            'specialization_id' => ['required', 'exists:specializations,id'],
+            'semester_id'       => ['required', 'exists:semesters,id'],
             'teacher_id'        => ['nullable', 'exists:users,id'],
-            'specialization_id' => ['nullable', 'exists:specializations,id'],
+            'description'       => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $semName = Semester::find($validated['semester_id'])?->name ?? 'S1';
+        $validated['semester'] = (int) preg_replace('/\D/', '', $semName) ?: 1;
 
         $module->update($validated);
 
-        // Keep legacy pivot in sync
         if ($validated['teacher_id'] ?? null) {
             $module->teachers()->sync([$validated['teacher_id']]);
         } else {
             $module->teachers()->detach();
+            $module->update(['teacher_id' => null]);
         }
 
-        return back()->with('success', 'Module updated.');
+        return back()->with('success', "Module \"{$module->name}\" updated.");
     }
 
     public function destroy(Module $module)
     {
+        $name = $module->name;
         $module->delete();
-        return back()->with('success', 'Module deleted.');
+        return back()->with('success', "Module \"{$name}\" deleted.");
     }
 
     public function students(Module $module): Response

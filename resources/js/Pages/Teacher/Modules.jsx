@@ -22,13 +22,13 @@ export default function Modules({ modules }) {
                         </div>
                     )}
 
-                    {[1, 2].map(sem => {
+                    {[...new Set(modules.map(m => m.semester))].sort((a, b) => a - b).map(sem => {
                         const semModules = modules.filter(m => m.semester === sem);
                         if (!semModules.length) return null;
                         return (
                             <div key={sem}>
                                 <h3 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-400">
-                                    Semester {sem}
+                                    S{sem}
                                 </h3>
                                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                     {semModules.map(mod => (

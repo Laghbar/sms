@@ -17,41 +17,56 @@ use Inertia\Response;
 
 class AdminController extends Controller
 {
-    public function dashboard(): Response
+    public function dashboard(Request $request): Response
     {
-        $totalModules    = Module::count();
-        $publishedCount  = Module::where('is_published', true)->count();
-        $gradesEntered   = Grade::count();
-        $studentsGraded  = Grade::distinct('student_id')->count('student_id');
+        $specId = $request->specialization_id;
+        $semId  = $request->semester_id;
 
-        // Per-module publication status for the summary table
-        $moduleSummary = Module::with('teacher:id,name')
-            ->withCount('students')
-            ->orderBy('name')
-            ->get()
-            ->map(fn (Module $m) => [
-                'id'             => $m->id,
-                'name'           => $m->name,
-                'teacher_name'   => $m->teacher?->name ?? '—',
-                'is_published'   => $m->is_published,
-                'students_count' => $m->students_count,
-                'grades_count'   => Grade::where('module_id', $m->id)->count(),
-            ]);
+        // Global stats always use full counts
+        $totalModules   = Module::count();
+        $publishedCount = Module::where('is_published', true)->count();
+        $gradesEntered  = Grade::count();
+        $studentsGraded = Grade::distinct('student_id')->count('student_id');
 
         $stats = [
-            'teachers'         => User::where('role', Role::Teacher)->count(),
-            'students'         => User::where('role', Role::Student)->count(),
-            'admins'           => User::where('role', Role::Admin)->count(),
-            'modules'          => $totalModules,
-            'modules_published'=> $publishedCount,
-            'modules_pending'  => $totalModules - $publishedCount,
-            'grades_entered'   => $gradesEntered,
-            'students_graded'  => $studentsGraded,
+            'teachers'          => User::where('role', Role::Teacher)->count(),
+            'students'          => User::where('role', Role::Student)->count(),
+            'admins'            => User::where('role', Role::Admin)->count(),
+            'modules'           => $totalModules,
+            'modules_published' => $publishedCount,
+            'modules_pending'   => $totalModules - $publishedCount,
+            'grades_entered'    => $gradesEntered,
+            'students_graded'   => $studentsGraded,
         ];
 
+        // Module summary — filtered when spec+semester are selected
+        $moduleSummary = null;
+        if ($specId && $semId) {
+            $moduleSummary = Module::with('teacher:id,name')
+                ->withCount('students')
+                ->where('specialization_id', $specId)
+                ->where('semester_id', $semId)
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Module $m) => [
+                    'id'             => $m->id,
+                    'name'           => $m->name,
+                    'teacher_name'   => $m->teacher?->name ?? '—',
+                    'is_published'   => $m->is_published,
+                    'students_count' => $m->students_count,
+                    'grades_count'   => Grade::where('module_id', $m->id)->count(),
+                ]);
+        }
+
+        $specializations = Specialization::with(['semesters' => fn ($q) => $q->orderBy('name')])
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+
         return Inertia::render('Admin/Dashboard', [
-            'stats'         => $stats,
-            'moduleSummary' => $moduleSummary,
+            'stats'           => $stats,
+            'moduleSummary'   => $moduleSummary,  // null = nothing selected
+            'specializations' => $specializations,
+            'filters'         => $request->only('specialization_id', 'semester_id'),
         ]);
     }
 
