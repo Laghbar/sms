@@ -80,9 +80,22 @@ export default function NotificationBell() {
                                 <li key={n.id} className="px-4 py-3 hover:bg-gray-50">
                                     <div className="flex items-start gap-3">
                                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-base">
-                                            {n.data.type === 'exam' ? '📝' : n.data.type === 'results' ? '📊' : '📢'}
+                                            {n.data.type === 'exam' ? '📝' : n.data.type === 'results' ? '📊' : n.data.type === 'password_forgot' ? '🔑' : '📢'}
                                         </div>
                                         <div className="min-w-0 flex-1">
+                                            {n.data.type === 'password_forgot' && (
+                                                <>
+                                                    <p className="text-xs font-semibold text-amber-600">
+                                                        Password Reset Request
+                                                    </p>
+                                                    <p className="mt-0.5 text-sm font-medium text-gray-900">{n.data.user_name}</p>
+                                                    <p className="text-xs text-gray-500">{n.data.user_email}</p>
+                                                    <div className="mt-1.5 flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1">
+                                                        <span className="text-xs text-amber-600">Temp password:</span>
+                                                        <span className="font-mono text-xs font-bold text-amber-800 select-all">{n.data.temp_password}</span>
+                                                    </div>
+                                                </>
+                                            )}
                                             {n.data.type === 'results' && (
                                                 <>
                                                     <p className="text-xs font-semibold text-indigo-700">
