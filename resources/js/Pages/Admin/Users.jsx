@@ -442,6 +442,67 @@ function DeleteAction({ user }) {
     );
 }
 
+/* ── Reset Password modal ────────────────────────────────────────────── */
+function ResetPasswordModal({ user, onClose }) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        password: '',
+        password_confirmation: '',
+    });
+
+    function submit(e) {
+        e.preventDefault();
+        post(route('admin.users.reset-password', user.id), {
+            onSuccess: () => { reset(); onClose(); },
+        });
+    }
+
+    const field = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400';
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
+            <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                <h3 className="mb-1 text-base font-semibold text-gray-900">Reset Password</h3>
+                <p className="mb-5 text-xs text-gray-400">{user.name} · {user.email}</p>
+
+                <form onSubmit={submit} className="space-y-4">
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">New Password</label>
+                        <input
+                            type="password"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            className={field}
+                            autoFocus
+                            placeholder="Min. 8 characters"
+                        />
+                        {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Confirm Password</label>
+                        <input
+                            type="password"
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                            className={field}
+                            placeholder="Repeat password"
+                        />
+                    </div>
+                    <div className="flex justify-end gap-3 pt-1">
+                        <button type="button" onClick={onClose}
+                            className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" disabled={processing}
+                            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
+                            {processing ? 'Saving…' : 'Reset Password'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
 /* ── Main page ───────────────────────────────────────────────────────── */
 export default function Users({ users, filters, specializations = [], semesters = [], modules = [] }) {
     const { flash } = usePage().props;
@@ -449,8 +510,9 @@ export default function Users({ users, filters, specializations = [], semesters 
     const [role, setRole]       = useState(filters.role ?? '');
     const [specId, setSpecId]   = useState(filters.specialization_id ?? '');
     const [semId, setSemId]     = useState(filters.semester_id ?? '');
-    const [editing, setEditing]   = useState(null);
-    const [creating, setCreating] = useState(false);
+    const [editing, setEditing]         = useState(null);
+    const [creating, setCreating]       = useState(false);
+    const [resetting, setResetting]     = useState(null);
 
     const apply = useCallback((s, r, sp, sm) => {
         router.get(route('admin.users'), {
@@ -506,6 +568,13 @@ export default function Users({ users, filters, specializations = [], semesters 
                     semesters={semesters}
                     modules={modules}
                     onClose={() => setEditing(null)}
+                />
+            )}
+
+            {resetting && (
+                <ResetPasswordModal
+                    user={resetting}
+                    onClose={() => setResetting(null)}
                 />
             )}
 
@@ -672,6 +741,13 @@ export default function Users({ users, filters, specializations = [], semesters 
                                                             className="rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
                                                         >
                                                             Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setResetting(user)}
+                                                            className="rounded px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50"
+                                                            title="Reset password"
+                                                        >
+                                                            Reset PWD
                                                         </button>
                                                         <DeleteAction user={user} />
                                                     </div>

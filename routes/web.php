@@ -54,6 +54,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::delete('/modules/{module}', [ModuleController::class, 'destroy'])->name('modules.destroy');
 
     Route::get('/modules/{module}/students', [ModuleController::class, 'students'])->name('modules.students');
+    Route::post('/users/{user}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
+
     Route::post('/modules/{module}/students', [ModuleController::class, 'enrollStudent'])->name('modules.students.enroll');
     Route::delete('/modules/{module}/students/{student}', [ModuleController::class, 'unenrollStudent'])->name('modules.students.unenroll');
 

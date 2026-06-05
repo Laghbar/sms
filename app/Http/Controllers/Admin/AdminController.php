@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -219,6 +220,19 @@ class AdminController extends Controller
         }
 
         return back()->with('success', "User \"{$user->name}\" updated.");
+    }
+
+    public function resetPassword(Request $request, User $user): RedirectResponse
+    {
+        abort_if($user->isAdmin(), 403);
+
+        $request->validate([
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user->update(['password' => Hash::make($request->password)]);
+
+        return back()->with('success', "Password reset for \"{$user->name}\".");
     }
 
     public function destroy(User $user): RedirectResponse
