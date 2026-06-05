@@ -330,7 +330,7 @@ export default function Modules({ modules, teachers, specializations, filters })
         <AdminLayout header={
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">Modules</h2>
-                {step === 'show' && (
+                {step === 'show' && modules != null && (
                     <button onClick={() => setCreating(true)}
                         className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -435,7 +435,7 @@ export default function Modules({ modules, teachers, specializations, filters })
                                 <div className={`rounded-lg border px-3 py-2 text-sm ${step !== 'show' ? 'border-gray-200 text-gray-300' : 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold'}`}>
                                     {step !== 'show'
                                         ? 'Waiting for selection…'
-                                        : `${modules?.length ?? 0} module${modules?.length !== 1 ? 's' : ''} found`}
+                                        : `${modules?.length ?? 0} module${(modules?.length ?? 0) !== 1 ? 's' : ''} found`}
                                 </div>
                             </div>
                         </div>
@@ -469,7 +469,7 @@ export default function Modules({ modules, teachers, specializations, filters })
                     )}
 
                     {/* ── Modules table ── */}
-                    {step === 'show' && (
+                    {step === 'show' && modules != null && (
                         <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                             {modules.length === 0 ? (
                                 <div className="py-16 text-center">

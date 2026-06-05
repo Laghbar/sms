@@ -479,7 +479,7 @@ export default function Users({ users, filters, specializations = [], semesters 
     // Semesters visible in the filter (filtered by selected specialization)
     const visibleSemesters = specId
         ? semesters.filter((s) => String(s.specialization_id) === String(specId))
-        : semesters;
+        : [];
 
     const hasFilters = search || role || specId || semId;
 

@@ -24,8 +24,9 @@ export default function TeacherLayout({ header, children }) {
                             </div>
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink href={route('teacher.dashboard')} active={route().current('teacher.dashboard')}>Dashboard</NavLink>
-                                <NavLink href={route('teacher.modules')}   active={route().current('teacher.modules')}>My Modules</NavLink>
-                                <NavLink href={route('teacher.results.index')} active={route().current('teacher.results.index')}>Results</NavLink>
+                                <NavLink href={route('teacher.modules')}          active={route().current('teacher.modules')}>My Modules</NavLink>
+                                <NavLink href={route('teacher.attendance.index')} active={route().current('teacher.attendance.*')}>Attendance</NavLink>
+                                <NavLink href={route('teacher.results.index')}    active={route().current('teacher.results.index')}>Results</NavLink>
                                 <NavLink href={route('teacher.course-files.index')} active={route().current('teacher.course-files.index')}>Course Files</NavLink>
                                 <NavLink href={route('teacher.events.index')} active={route().current('teacher.events.index')}>
                                     <span className="relative">
@@ -73,8 +74,9 @@ export default function TeacherLayout({ header, children }) {
                 <div className={(open ? 'block' : 'hidden') + ' sm:hidden'}>
                     <div className="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink href={route('teacher.dashboard')} active={route().current('teacher.dashboard')}>Dashboard</ResponsiveNavLink>
-                        <ResponsiveNavLink href={route('teacher.modules')}   active={route().current('teacher.modules')}>My Modules</ResponsiveNavLink>
-                        <ResponsiveNavLink href={route('teacher.results.index')} active={route().current('teacher.results.index')}>Results</ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('teacher.modules')}          active={route().current('teacher.modules')}>My Modules</ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('teacher.attendance.index')} active={route().current('teacher.attendance.*')}>Attendance</ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('teacher.results.index')}    active={route().current('teacher.results.index')}>Results</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.course-files.index')} active={route().current('teacher.course-files.index')}>Course Files</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.events.index')} active={route().current('teacher.events.index')}>
                             Events {new_events_count > 0 && <span className="ms-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{new_events_count > 9 ? '9+' : new_events_count}</span>}

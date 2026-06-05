@@ -16,6 +16,7 @@ use App\Http\Controllers\Teacher\CourseFileController as TeacherCourseFileContro
 use App\Http\Controllers\Teacher\CourseFileCommentController as TeacherCourseFileCommentController;
 use App\Http\Controllers\Teacher\EventController as TeacherEventController;
 use App\Http\Controllers\Teacher\ResultController as TeacherResultController;
+use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceController;
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Teacher\TpController;
 use App\Http\Controllers\Student\CourseFileController as StudentCourseFileController;
@@ -95,6 +96,10 @@ Route::middleware(['auth', 'verified', 'teacher'])->prefix('teacher')->name('tea
     Route::get('/dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
     Route::get('/modules',   [TeacherController::class, 'modules'])->name('modules');
     Route::get('/schedule',  [TeacherController::class, 'schedule'])->name('schedule');
+
+    Route::get('/attendance',                [TeacherAttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('/attendance/{module}',       [TeacherAttendanceController::class, 'session'])->name('attendance.session');
+    Route::post('/attendance/{module}/save', [TeacherAttendanceController::class, 'save'])->name('attendance.save');
 
     Route::get('/tps',              [TpController::class, 'index'])->name('tps.index');
     Route::post('/tps',             [TpController::class, 'store'])->name('tps.store');
