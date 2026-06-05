@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\ExamController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\ModuleScheduleController;
+use App\Http\Controllers\Admin\StageFolderController as AdminStageFolderController;
 use App\Http\Controllers\Admin\ResultController as AdminResultController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\NotificationController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Student\CourseFileController as StudentCourseFileContro
 use App\Http\Controllers\Student\CourseFileCommentController as StudentCourseFileCommentController;
 use App\Http\Controllers\Student\TpSubmissionController;
 use App\Http\Controllers\Student\EventController as StudentEventController;
+use App\Http\Controllers\Student\StageFolderController as StudentStageFolderController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -68,6 +70,12 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     Route::get('/advancement',  [SemesterAdvancementController::class, 'index'])->name('advancement.index');
     Route::post('/advancement', [SemesterAdvancementController::class, 'advance'])->name('advancement.advance');
+
+    Route::get('/stage-folders',                                          [AdminStageFolderController::class, 'index'])->name('stage-folders.index');
+    Route::patch('/stage-folders/{stageFolderRequest}/status',            [AdminStageFolderController::class, 'updateStatus'])->name('stage-folders.status');
+    Route::post('/stage-folders/{stageFolderRequest}/upload',             [AdminStageFolderController::class, 'upload'])->name('stage-folders.upload');
+    Route::get('/stage-folders/{stageFolderRequest}/download',            [AdminStageFolderController::class, 'download'])->name('stage-folders.download');
+    Route::delete('/stage-folders/{stageFolderRequest}',                  [AdminStageFolderController::class, 'destroy'])->name('stage-folders.destroy');
 
     Route::post('/specializations', [SpecializationController::class, 'store'])->name('specializations.store');
     Route::delete('/specializations/{specialization}', [SpecializationController::class, 'destroy'])->name('specializations.destroy');
@@ -155,6 +163,11 @@ Route::middleware(['auth', 'verified', 'student'])->prefix('student')->name('stu
     Route::delete('/tp-submissions/{submission}',                      [TpSubmissionController::class, 'destroy'])->name('tp-submissions.destroy');
     Route::post('/course-files/{courseFile}/comments',                 [StudentCourseFileCommentController::class, 'store'])->name('course-file-comments.store');
     Route::delete('/course-file-comments/{comment}',                   [StudentCourseFileCommentController::class, 'destroy'])->name('course-file-comments.destroy');
+
+    Route::get('/stage-folder',                                        [StudentStageFolderController::class, 'index'])->name('stage-folder.index');
+    Route::post('/stage-folder',                                       [StudentStageFolderController::class, 'store'])->name('stage-folder.store');
+    Route::delete('/stage-folder/{stageFolderRequest}',                [StudentStageFolderController::class, 'cancel'])->name('stage-folder.cancel');
+    Route::get('/stage-folder/{stageFolderRequest}/download',          [StudentStageFolderController::class, 'download'])->name('stage-folder.download');
 });
 
 // ── Profile & notifications ────────────────────────────────────────────────
