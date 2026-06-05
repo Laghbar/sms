@@ -22,11 +22,15 @@ use App\Http\Controllers\Student\EventController as StudentEventController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', LandingController::class)->name('home');
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $user = auth()->user();
+    if ($user->isAdmin())   return redirect()->route('admin.dashboard');
+    if ($user->isTeacher()) return redirect()->route('teacher.dashboard');
+    return redirect()->route('student.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // ── Admin ──────────────────────────────────────────────────────────────────
@@ -64,10 +68,13 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::delete('/events/{event}',         [AdminEventController::class, 'destroy'])->name('events.destroy');
     Route::post('/events/{event}/notify',    [AdminEventController::class, 'notify'])->name('events.notify');
 
-    Route::get('/exams',                     [ExamController::class, 'index'])->name('exams.index');
-    Route::post('/exams',                    [ExamController::class, 'store'])->name('exams.store');
-    Route::put('/exams/{exam}',              [ExamController::class, 'update'])->name('exams.update');
-    Route::delete('/exams/{exam}',           [ExamController::class, 'destroy'])->name('exams.destroy');
+    Route::get('/exams',                                         [ExamController::class, 'index'])->name('exams.index');
+    Route::post('/exams',                                        [ExamController::class, 'store'])->name('exams.store');
+    Route::put('/exams/{exam}',                                  [ExamController::class, 'update'])->name('exams.update');
+    Route::delete('/exams/{exam}',                               [ExamController::class, 'destroy'])->name('exams.destroy');
+    Route::post('/exams/timetables',                             [ExamController::class, 'uploadTimetable'])->name('exams.timetables.store');
+    Route::delete('/exams/timetables/{timetable}',               [ExamController::class, 'deleteTimetable'])->name('exams.timetables.destroy');
+    Route::get('/exams/timetables/{timetable}/download',         [ExamController::class, 'downloadTimetable'])->name('exams.timetables.download');
 });
 
 // ── Teacher ────────────────────────────────────────────────────────────────
@@ -116,6 +123,10 @@ Route::middleware(['auth', 'verified', 'student'])->prefix('student')->name('stu
     Route::get('/events',                          [StudentEventController::class, 'index'])->name('events.index');
     Route::post('/events/{event}/register',        [StudentEventController::class, 'register'])->name('events.register');
     Route::delete('/events/{event}/register',      [StudentEventController::class, 'unregister'])->name('events.unregister');
+
+    Route::get('/exam-timetables/{timetable}/download', function (\App\Models\ExamTimetable $timetable) {
+        return \Illuminate\Support\Facades\Storage::disk('public')->download($timetable->file_path, $timetable->file_name);
+    })->name('exam-timetables.download');
 
     Route::get('/course-files',                                        [StudentCourseFileController::class, 'index'])->name('course-files.index');
     Route::get('/course-files/{courseFile}/download',                  [StudentCourseFileController::class, 'download'])->name('course-files.download');

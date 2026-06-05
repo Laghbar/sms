@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Models\ExamTimetable;
 use App\Models\Grade;
 use App\Models\Module;
 use App\Models\Schedule;
@@ -191,9 +192,26 @@ class StudentController extends Controller
             }
         }
 
+        // Show timetables for this student's specialization + those marked "all"
+        $examTimetables = ExamTimetable::where(function ($q) use ($student) {
+                $q->whereNull('specialization_id')
+                  ->orWhere('specialization_id', $student->specialization_id);
+            })
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(fn ($t) => [
+                'id'           => $t->id,
+                'title'        => $t->title,
+                'file_name'    => $t->file_name,
+                'created_at'   => $t->created_at->toDateString(),
+                'download_url' => route('student.exam-timetables.download', $t->id),
+            ]);
+
         return Inertia::render('Student/Schedule', [
-            'schedules' => $schedules,
-            'timetable' => $timetable,
+            'schedules'       => $schedules,
+            'timetable'       => $timetable,
+            'examTimetables'  => $examTimetables,
         ]);
     }
 
