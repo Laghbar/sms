@@ -25,7 +25,6 @@ export default function TeacherLayout({ header, children }) {
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink href={route('teacher.dashboard')} active={route().current('teacher.dashboard')}>Dashboard</NavLink>
                                 <NavLink href={route('teacher.modules')}   active={route().current('teacher.modules')}>My Modules</NavLink>
-                                <NavLink href={route('teacher.schedule')}  active={route().current('teacher.schedule')}>Schedule</NavLink>
                                 <NavLink href={route('teacher.results.index')} active={route().current('teacher.results.index')}>Results</NavLink>
                                 <NavLink href={route('teacher.course-files.index')} active={route().current('teacher.course-files.index')}>Course Files</NavLink>
                                 <NavLink href={route('teacher.events.index')} active={route().current('teacher.events.index')}>
@@ -75,7 +74,6 @@ export default function TeacherLayout({ header, children }) {
                     <div className="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink href={route('teacher.dashboard')} active={route().current('teacher.dashboard')}>Dashboard</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.modules')}   active={route().current('teacher.modules')}>My Modules</ResponsiveNavLink>
-                        <ResponsiveNavLink href={route('teacher.schedule')}  active={route().current('teacher.schedule')}>Schedule</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.results.index')} active={route().current('teacher.results.index')}>Results</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.course-files.index')} active={route().current('teacher.course-files.index')}>Course Files</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('teacher.events.index')} active={route().current('teacher.events.index')}>

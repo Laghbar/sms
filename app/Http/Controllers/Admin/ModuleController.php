@@ -23,8 +23,8 @@ class ModuleController extends Controller
         $modules = null;
         if ($specId && $semId) {
             $modules = Module::query()
-                ->with(['teacher:id,name'])
-                ->withCount(['students', 'schedules'])
+                ->with(['teacher:id,name', 'schedules'])
+                ->withCount('students')
                 ->where('specialization_id', $specId)
                 ->where('semester_id', $semId)
                 ->orderBy('name')
@@ -41,6 +41,15 @@ class ModuleController extends Controller
                     'students_count'  => $m->students_count,
                     'semester_id'     => $m->semester_id,
                     'specialization_id' => $m->specialization_id,
+                    'schedules'       => $m->schedules->map(fn ($s) => [
+                        'id'          => $s->id,
+                        'day'         => $s->day,
+                        'type'        => $s->type,
+                        'start_time'  => $s->start_time,
+                        'end_time'    => $s->end_time,
+                        'room'        => $s->room,
+                        'week_parity' => $s->week_parity,
+                    ])->values(),
                 ]);
         }
 

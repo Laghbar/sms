@@ -5,6 +5,14 @@ import { useState } from 'react';
 /* ── Shared field style ──────────────────────────────────────────────── */
 const F = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400';
 
+const DAY_OPTS = ['monday','tuesday','wednesday','thursday','friday','saturday'];
+const TYPE_COLORS = {
+    cours: 'bg-indigo-100 text-indigo-700',
+    td:    'bg-amber-100 text-amber-700',
+    tp:    'bg-emerald-100 text-emerald-700',
+};
+const DAY_ABBR = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri', saturday:'Sat' };
+
 /* ── Module form (create / edit) ─────────────────────────────────────── */
 function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillSemId, onClose }) {
     const isEdit = !!module;
@@ -19,7 +27,6 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
         description:       module?.description     ?? '',
     });
 
-    // Semesters filtered by chosen specialization
     const selectedSpec  = specializations.find((s) => String(s.id) === String(data.specialization_id));
     const semesterList  = selectedSpec?.semesters ?? [];
 
@@ -36,7 +43,6 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
 
     return (
         <form onSubmit={submit} className="space-y-4">
-            {/* Name */}
             <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Module Name</label>
                 <input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)}
@@ -44,7 +50,6 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
                 {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
             </div>
 
-            {/* Code */}
             <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Code</label>
                 <input type="text" value={data.code} onChange={(e) => setData('code', e.target.value.toUpperCase())}
@@ -52,7 +57,6 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
                 {errors.code && <p className="mt-1 text-xs text-red-500">{errors.code}</p>}
             </div>
 
-            {/* Specialization */}
             <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Specialization</label>
                 <select value={data.specialization_id} onChange={(e) => handleSpecChange(e.target.value)} className={F}>
@@ -64,7 +68,6 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
                 {errors.specialization_id && <p className="mt-1 text-xs text-red-500">{errors.specialization_id}</p>}
             </div>
 
-            {/* Semester */}
             <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Semester</label>
                 <select value={data.semester_id} onChange={(e) => setData('semester_id', e.target.value)}
@@ -77,7 +80,6 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
                 {errors.semester_id && <p className="mt-1 text-xs text-red-500">{errors.semester_id}</p>}
             </div>
 
-            {/* Coefficient */}
             <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Coefficient</label>
                 <select value={data.coefficient} onChange={(e) => setData('coefficient', Number(e.target.value))} className={F}>
@@ -88,7 +90,6 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
                 {errors.coefficient && <p className="mt-1 text-xs text-red-500">{errors.coefficient}</p>}
             </div>
 
-            {/* Teacher */}
             <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
                     Teacher <span className="font-normal text-gray-400">(optional)</span>
@@ -102,7 +103,6 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
                 {errors.teacher_id && <p className="mt-1 text-xs text-red-500">{errors.teacher_id}</p>}
             </div>
 
-            {/* Description */}
             <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
                     Description <span className="font-normal text-gray-400">(optional)</span>
@@ -123,6 +123,130 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
                 </button>
             </div>
         </form>
+    );
+}
+
+/* ── Sessions modal content ──────────────────────────────────────────── */
+function SessionsPanel({ module, onClose }) {
+    const { data, setData, post, reset, errors, processing } = useForm({
+        day:         'monday',
+        type:        'cours',
+        start_time:  '',
+        end_time:    '',
+        room:        '',
+        week_parity: 'all',
+    });
+    const [deletingId, setDeletingId] = useState(null);
+
+    function addSession(e) {
+        e.preventDefault();
+        post(route('admin.modules.schedules.store', module.id), {
+            preserveScroll: true,
+            onSuccess: () => reset(),
+        });
+    }
+
+    function removeSession(scheduleId) {
+        setDeletingId(scheduleId);
+        router.delete(route('admin.modules.schedules.destroy', [module.id, scheduleId]), {
+            preserveScroll: true,
+            onFinish: () => setDeletingId(null),
+        });
+    }
+
+    return (
+        <div>
+            {/* Existing sessions list */}
+            {module.schedules?.length > 0 ? (
+                <div className="mb-5 space-y-2">
+                    {module.schedules.map(s => (
+                        <div key={s.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${TYPE_COLORS[s.type]}`}>
+                                    {s.type.toUpperCase()}
+                                </span>
+                                <span className="font-medium text-gray-700">{DAY_ABBR[s.day]}</span>
+                                <span className="text-gray-500">
+                                    {s.start_time?.slice(0,5)}–{s.end_time?.slice(0,5)}
+                                </span>
+                                <span className="text-gray-400">· {s.room}</span>
+                                {s.week_parity !== 'all' && (
+                                    <span className="rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-500">
+                                        {s.week_parity} weeks
+                                    </span>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => removeSession(s.id)}
+                                disabled={deletingId === s.id}
+                                className="ml-3 shrink-0 text-xs text-red-400 hover:text-red-600 disabled:opacity-40"
+                            >
+                                {deletingId === s.id ? '…' : 'Remove'}
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <p className="mb-5 text-sm text-gray-400 italic">No sessions assigned yet.</p>
+            )}
+
+            {/* Add session form */}
+            <form onSubmit={addSession} className="space-y-3 border-t border-gray-100 pt-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Add Session</p>
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">Day</label>
+                        <select value={data.day} onChange={e => setData('day', e.target.value)} className={F}>
+                            {DAY_OPTS.map(d => (
+                                <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">Type</label>
+                        <select value={data.type} onChange={e => setData('type', e.target.value)} className={F}>
+                            <option value="cours">Cours</option>
+                            <option value="td">TD</option>
+                            <option value="tp">TP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">Start time</label>
+                        <input type="time" value={data.start_time} onChange={e => setData('start_time', e.target.value)} className={F} />
+                        {errors.start_time && <p className="mt-0.5 text-xs text-red-500">{errors.start_time}</p>}
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">End time</label>
+                        <input type="time" value={data.end_time} onChange={e => setData('end_time', e.target.value)} className={F} />
+                        {errors.end_time && <p className="mt-0.5 text-xs text-red-500">{errors.end_time}</p>}
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">Room</label>
+                        <input type="text" value={data.room} onChange={e => setData('room', e.target.value)}
+                            placeholder="e.g. B-205" className={F} />
+                        {errors.room && <p className="mt-0.5 text-xs text-red-500">{errors.room}</p>}
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">Week</label>
+                        <select value={data.week_parity} onChange={e => setData('week_parity', e.target.value)} className={F}>
+                            <option value="all">Every week</option>
+                            <option value="odd">Odd weeks</option>
+                            <option value="even">Even weeks</option>
+                        </select>
+                    </div>
+                </div>
+                <div className="flex justify-end gap-3 pt-1">
+                    <button type="button" onClick={onClose}
+                        className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                        Close
+                    </button>
+                    <button type="submit" disabled={processing}
+                        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
+                        {processing ? 'Adding…' : 'Add Session'}
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 }
 
@@ -175,6 +299,10 @@ export default function Modules({ modules, teachers, specializations, filters })
     const [creating, setCreating] = useState(false);
     const [editing,  setEditing]  = useState(null);
     const [deletingId, setDeletingId] = useState(null);
+    const [schedulingModuleId, setSchedulingModuleId] = useState(null);
+
+    // Always read from latest props so the sessions list refreshes after add/remove
+    const schedulingModule = modules?.find(m => m.id === schedulingModuleId) ?? null;
 
     const selectedSpec  = specializations.find((s) => String(s.id) === String(specId));
     const semesterList  = selectedSpec?.semesters ?? [];
@@ -239,6 +367,20 @@ export default function Modules({ modules, teachers, specializations, filters })
                 )}
             </Modal>
 
+            {/* Sessions modal */}
+            <Modal
+                open={!!schedulingModule}
+                onClose={() => setSchedulingModuleId(null)}
+                title={schedulingModule ? `Sessions — ${schedulingModule.name}` : ''}
+            >
+                {schedulingModule && (
+                    <SessionsPanel
+                        module={schedulingModule}
+                        onClose={() => setSchedulingModuleId(null)}
+                    />
+                )}
+            </Modal>
+
             <div className="py-10">
                 <div className="mx-auto max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
 
@@ -258,14 +400,12 @@ export default function Modules({ modules, teachers, specializations, filters })
                             Select a specialization and semester to view modules
                         </p>
                         <div className="flex flex-wrap gap-4">
-                            {/* Step 1: Specialization */}
                             <div className="flex-1 min-w-48">
                                 <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">1</span>
                                     Specialization
                                 </label>
-                                <select value={specId} onChange={(e) => handleSpecChange(e.target.value)}
-                                    className={F}>
+                                <select value={specId} onChange={(e) => handleSpecChange(e.target.value)} className={F}>
                                     <option value="">— Choose specialization —</option>
                                     {specializations.map((s) => (
                                         <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
@@ -273,7 +413,6 @@ export default function Modules({ modules, teachers, specializations, filters })
                                 </select>
                             </div>
 
-                            {/* Step 2: Semester */}
                             <div className="flex-1 min-w-48">
                                 <label className={`mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide ${!specId ? 'text-gray-300' : 'text-gray-400'}`}>
                                     <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white ${!specId ? 'bg-gray-300' : 'bg-indigo-600'}`}>2</span>
@@ -288,7 +427,6 @@ export default function Modules({ modules, teachers, specializations, filters })
                                 </select>
                             </div>
 
-                            {/* Step 3: indicator */}
                             <div className="flex-1 min-w-48 flex flex-col justify-end">
                                 <label className={`mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide ${step !== 'show' ? 'text-gray-300' : 'text-gray-400'}`}>
                                     <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white ${step !== 'show' ? 'bg-gray-300' : 'bg-emerald-500'}`}>3</span>
@@ -350,6 +488,7 @@ export default function Modules({ modules, teachers, specializations, filters })
                                             <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Teacher</th>
                                             <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Coeff</th>
                                             <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Students</th>
+                                            <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Sessions</th>
                                             <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
                                             <th className="px-5 py-3" />
                                         </tr>
@@ -380,6 +519,15 @@ export default function Modules({ modules, teachers, specializations, filters })
                                                     </span>
                                                 </td>
                                                 <td className="px-5 py-4 text-center text-sm text-gray-600">{mod.students_count}</td>
+                                                <td className="px-5 py-4 text-center">
+                                                    <button
+                                                        onClick={() => setSchedulingModuleId(mod.id)}
+                                                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition hover:opacity-80
+                                                            bg-violet-100 text-violet-700 hover:bg-violet-200"
+                                                    >
+                                                        🗓 {mod.schedules?.length ?? 0}
+                                                    </button>
+                                                </td>
                                                 <td className="px-5 py-4 text-center">
                                                     {mod.is_published
                                                         ? <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Published</span>

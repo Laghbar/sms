@@ -8,6 +8,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\ExamController;
 use App\Http\Controllers\Admin\ModuleController;
+use App\Http\Controllers\Admin\ModuleScheduleController;
 use App\Http\Controllers\Admin\ResultController as AdminResultController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\NotificationController;
@@ -54,6 +55,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/modules/{module}/students', [ModuleController::class, 'students'])->name('modules.students');
     Route::post('/modules/{module}/students', [ModuleController::class, 'enrollStudent'])->name('modules.students.enroll');
     Route::delete('/modules/{module}/students/{student}', [ModuleController::class, 'unenrollStudent'])->name('modules.students.unenroll');
+
+    Route::post('/modules/{module}/schedules', [ModuleScheduleController::class, 'store'])->name('modules.schedules.store');
+    Route::delete('/modules/{module}/schedules/{schedule}', [ModuleScheduleController::class, 'destroy'])->name('modules.schedules.destroy');
 
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
     Route::post('/schedules/semesters/{semester}/upload', [ScheduleController::class, 'uploadTimetable'])->name('schedules.upload');
