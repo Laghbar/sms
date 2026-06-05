@@ -16,7 +16,21 @@
       "Bash(findstr /i \"MAIL\")",
       "Bash(ls -la \"c:\\\\Users\\\\PC\\\\sms\\\\\" | head -20)",
       "Read(//c/Users/PC/**)",
-      "Bash(findstr /i \"MAIL_\" C:\\\\Users\\\\PC\\\\sms\\\\.env)"
+      "Bash(findstr /i \"MAIL_\" C:\\\\Users\\\\PC\\\\sms\\\\.env)",
+      "Bash(grep -r \"\\\\\\\\\\\\\\\\App\\\\\\\\\\\\\\\\Models\\\\\\\\\\\\\\\\\" c:/Users/PC/sms/app/Http/Controllers --include=\"*.php\" -h)",
+      "Bash(grep -r \"use App\\\\\\\\\\\\Models\" c:/Users/PC/sms/app --include=\"*.php\" -h)",
+      "Bash(grep -oP \"Models\\\\\\\\\\\\K\\\\w+\")",
+      "Bash(xargs -I {} basename {} .php)",
+      "Bash(cd c:/Users/PC/sms && grep -r \"Inertia::render\" app/Http/Controllers --include=\"*.php\" -h | grep -oP \"render\\\\\\('[^']*\" | sed \"s/render\\('//g\" | sort -u > /tmp/rendered_pages.txt && cat /tmp/rendered_pages.txt)",
+      "Read(//tmp/**)",
+      "Bash(grep -r \"use App\\\\\\\\\\\\\\\\Http\\\\\\\\\\\\\\\\Controllers\" c:/Users/PC/sms/routes --include=\"*.php\" -h)",
+      "Bash(grep -oP \"Controllers\\\\\\\\\\\\K[^;]*\")",
+      "Bash(grep -v '^Controller$')",
+      "Bash(del \"C:\\\\Users\\\\PC\\\\sms\\\\resources\\\\js\\\\Pages\\\\Dashboard.jsx\")",
+      "Bash(del \"C:\\\\Users\\\\PC\\\\sms\\\\app\\\\Notifications\\\\AccountCreated.php\")",
+      "Bash(del \"C:\\\\Users\\\\PC\\\\sms\\\\database\\\\seeders\\\\ScheduleSeeder.php\")",
+      "Bash(del \"C:\\\\Users\\\\PC\\\\sms\\\\database\\\\seeders\\\\ExtendedDataSeeder.php\")",
+      "Bash(del \"C:\\\\Users\\\\PC\\\\sms\\\\database\\\\seeders\\\\GBAgcDataSeeder.php\")"
     ]
   }
 }

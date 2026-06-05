@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             SampleDataSeeder::class,
             AcademicStructureSeeder::class,
+            EnrollmentRepairSeeder::class,
+            GradesSeeder::class,
         ]);
     }
 }

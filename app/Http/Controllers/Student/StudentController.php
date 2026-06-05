@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Student;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Models\CourseFile;
 use App\Models\ExamTimetable;
 use App\Models\Grade;
 use App\Models\Module;
 use App\Models\Schedule;
-use App\Models\Tp;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -24,12 +24,24 @@ class StudentController extends Controller
         $grades  = Grade::where('student_id', $student->id)->whereIn('module_id', $moduleIds)->get();
         $average = $grades->isNotEmpty() ? round($grades->avg('grade'), 2) : null;
 
+        $today = now()->startOfDay();
+
+        // TP course files with a future deadline that this student hasn't submitted yet
+        $pendingTps = CourseFile::whereIn('module_id', $moduleIds)
+            ->where('type', 'tp')
+            ->where('due_date', '>=', $today)
+            ->whereDoesntHave('submissions', fn ($q) => $q->where('student_id', $student->id))
+            ->orderBy('due_date')
+            ->get(['id', 'title', 'due_date']);
+
+        $nextTp = $pendingTps->first();
+
         $stats = [
-            'modules'     => $moduleIds->count(),
-            'average'     => $average,
-            'pending_tps' => Tp::whereIn('module_id', $moduleIds)
-                                ->where('due_date', '>=', now()->toDateString())
-                                ->count(),
+            'modules'        => $moduleIds->count(),
+            'average'        => $average,
+            'pending_tps'    => $pendingTps->count(),
+            'next_tp_title'  => $nextTp?->title,
+            'next_tp_due'    => $nextTp?->due_date->toDateString(),
         ];
 
         return Inertia::render('Student/Dashboard', ['stats' => $stats]);
