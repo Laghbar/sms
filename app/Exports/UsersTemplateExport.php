@@ -28,6 +28,10 @@ class UsersTemplateExport implements FromArray, WithHeadings, WithStyles, Should
             return ['name', 'email', 'password', 'specialization', 'semester'];
         }
 
+        if ($this->role === 'teacher') {
+            return ['name', 'email', 'password', 'modules'];
+        }
+
         return ['name', 'email', 'password'];
     }
 
@@ -44,8 +48,8 @@ class UsersTemplateExport implements FromArray, WithHeadings, WithStyles, Should
             // All semester names across all specializations
             $allSemesters = $specs->flatMap(fn ($s) => $s->semesters->pluck('name'))->unique()->sort()->values();
             $semNote = $allSemesters->isNotEmpty()
-                ? 'e.g. ' . $allSemesters->implode(', ')
-                : 'e.g. S1, S2, S3, S4';
+                ? 'e.g. ' . $allSemesters->implode(', ') . ' (defaults to S2 or S4 if blank)'
+                : 'e.g. S2, S4 (end of year — defaults to last semester if blank)';
 
             return [
                 ['Ali Bensalem',   'ali@example.com',   'Pass123!', $firstCode, 'S2'],
@@ -54,6 +58,19 @@ class UsersTemplateExport implements FromArray, WithHeadings, WithStyles, Should
                 ['', '', '← auto-generated if blank',
                     '← ' . implode(', ', $specCodes),
                     '← ' . $semNote],
+            ];
+        }
+
+        if ($this->role === 'teacher') {
+            $moduleCodes = \App\Models\Module::orderBy('code')->pluck('code')->toArray();
+            $codesNote   = !empty($moduleCodes)
+                ? '← e.g. ' . implode(', ', array_slice($moduleCodes, 0, 4)) . (count($moduleCodes) > 4 ? ', …' : '')
+                : '← e.g. GI-ALG-S1, GI-MATH-S1';
+
+            return [
+                ['Dr. Ahmed Benali',   'ahmed@example.com',  'Pass123!', 'GI-ALG-S1'],
+                ['Prof. Sara Meziani', 'sara@example.com',   '',         'GI-MATH-S1, GI-ARCH-S1'],
+                ['', '', '← auto-generated if blank', $codesNote . ' (comma-separated, optional)'],
             ];
         }
 
@@ -66,7 +83,11 @@ class UsersTemplateExport implements FromArray, WithHeadings, WithStyles, Should
 
     public function styles(Worksheet $sheet): void
     {
-        $lastCol     = $this->role === 'student' ? 'E' : 'C';
+        $lastCol     = match($this->role) {
+            'student' => 'E',
+            'teacher' => 'D',
+            default   => 'C',
+        };
         $lastDataRow = $this->role === 'student' ? 5 : 4;
 
         $sheet->getStyle("A1:{$lastCol}1")->applyFromArray([

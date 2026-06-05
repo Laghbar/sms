@@ -26,7 +26,7 @@ export default function StudentLayout({ header, children }) {
                                 <NavLink href={route('student.dashboard')} active={route().current('student.dashboard')}>Dashboard</NavLink>
                                 <NavLink href={route('student.results')}   active={route().current('student.results')}>Results</NavLink>
                                 <NavLink href={route('student.schedule')}  active={route().current('student.schedule')}>Emploi du Temps</NavLink>
-                                <NavLink href={route('student.tps')}          active={route().current('student.tps')}>TPs</NavLink>
+                                <NavLink href={route('student.course-files.index')} active={route().current('student.course-files.index')}>Course Files</NavLink>
                                 <NavLink href={route('student.events.index')} active={route().current('student.events.index')}>
                                     <span className="relative">
                                         Events
@@ -75,7 +75,7 @@ export default function StudentLayout({ header, children }) {
                         <ResponsiveNavLink href={route('student.dashboard')} active={route().current('student.dashboard')}>Dashboard</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('student.results')}   active={route().current('student.results')}>Results</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('student.schedule')}  active={route().current('student.schedule')}>Emploi du Temps</ResponsiveNavLink>
-                        <ResponsiveNavLink href={route('student.tps')}          active={route().current('student.tps')}>TPs</ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('student.course-files.index')} active={route().current('student.course-files.index')}>Course Files</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('student.events.index')} active={route().current('student.events.index')}>
                             Events {new_events_count > 0 && <span className="ms-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{new_events_count > 9 ? '9+' : new_events_count}</span>}
                         </ResponsiveNavLink>

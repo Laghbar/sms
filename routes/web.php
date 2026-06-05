@@ -2,31 +2,26 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BulkImportController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\ExamController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\ResultController as AdminResultController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Teacher\CourseFileController as TeacherCourseFileController;
 use App\Http\Controllers\Teacher\EventController as TeacherEventController;
 use App\Http\Controllers\Teacher\ResultController as TeacherResultController;
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Teacher\TpController;
+use App\Http\Controllers\Student\CourseFileController as StudentCourseFileController;
+use App\Http\Controllers\Student\TpSubmissionController;
 use App\Http\Controllers\Student\EventController as StudentEventController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin'       => Route::has('login'),
-        'canRegister'    => false,
-        'laravelVersion' => Application::VERSION,
-        'phpVersion'     => PHP_VERSION,
-    ]);
-});
+Route::get('/', LandingController::class)->name('home');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -97,6 +92,13 @@ Route::middleware(['auth', 'verified', 'teacher'])->prefix('teacher')->name('tea
     Route::delete('/events/{event}',               [TeacherEventController::class, 'destroy'])->name('events.destroy');
     Route::post('/events/{event}/register',        [TeacherEventController::class, 'register'])->name('events.register');
     Route::delete('/events/{event}/register',      [TeacherEventController::class, 'unregister'])->name('events.unregister');
+
+    Route::get('/course-files',                                        [TeacherCourseFileController::class, 'index'])->name('course-files.index');
+    Route::post('/course-files',                                       [TeacherCourseFileController::class, 'store'])->name('course-files.store');
+    Route::delete('/course-files/{courseFile}',                        [TeacherCourseFileController::class, 'destroy'])->name('course-files.destroy');
+    Route::get('/course-files/{courseFile}/download',                  [TeacherCourseFileController::class, 'download'])->name('course-files.download');
+    Route::get('/course-files/{courseFile}/submissions',               [TeacherCourseFileController::class, 'submissions'])->name('course-files.submissions');
+    Route::get('/tp-submissions/{submission}/download',                [TeacherCourseFileController::class, 'submissionDownload'])->name('course-files.submission-download');
 });
 
 // ── Student ────────────────────────────────────────────────────────────────
@@ -109,6 +111,12 @@ Route::middleware(['auth', 'verified', 'student'])->prefix('student')->name('stu
     Route::get('/events',                          [StudentEventController::class, 'index'])->name('events.index');
     Route::post('/events/{event}/register',        [StudentEventController::class, 'register'])->name('events.register');
     Route::delete('/events/{event}/register',      [StudentEventController::class, 'unregister'])->name('events.unregister');
+
+    Route::get('/course-files',                       [StudentCourseFileController::class, 'index'])->name('course-files.index');
+    Route::get('/course-files/{courseFile}/download', [StudentCourseFileController::class, 'download'])->name('course-files.download');
+
+    Route::post('/course-files/{courseFile}/submission',  [TpSubmissionController::class, 'store'])->name('tp-submissions.store');
+    Route::delete('/tp-submissions/{submission}',         [TpSubmissionController::class, 'destroy'])->name('tp-submissions.destroy');
 });
 
 // ── Profile & notifications ────────────────────────────────────────────────

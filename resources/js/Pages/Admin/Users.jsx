@@ -77,12 +77,20 @@ function Pagination({ links }) {
 }
 
 /* ── Edit modal ──────────────────────────────────────────────────────── */
-function EditModal({ user, specializations, semesters, onClose }) {
+function EditModal({ user, specializations, semesters, modules, onClose }) {
     const { data, setData, patch, processing, errors } = useForm({
         name:              user.name,
         specialization_id: user.specialization?.id ?? '',
         semester_id:       user.semester_id ?? '',
+        module_ids:        user.teaching_modules?.map((m) => m.id) ?? [],
     });
+
+    function toggleModule(id) {
+        setData('module_ids', data.module_ids.includes(id)
+            ? data.module_ids.filter((x) => x !== id)
+            : [...data.module_ids, id]
+        );
+    }
 
     // Filter semesters by selected specialization
     const filteredSemesters = data.specialization_id
@@ -103,7 +111,7 @@ function EditModal({ user, specializations, semesters, onClose }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
-            <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className={`w-full ${user.role === 'teacher' ? 'max-w-lg' : 'max-w-md'} rounded-xl bg-white p-6 shadow-xl`} onClick={(e) => e.stopPropagation()}>
                 <h3 className="mb-1 text-base font-semibold text-gray-900">Edit User</h3>
                 <p className="mb-5 text-xs text-gray-400">{user.email}</p>
 
@@ -160,6 +168,39 @@ function EditModal({ user, specializations, semesters, onClose }) {
                         </>
                     )}
 
+                    {/* Modules — teachers only */}
+                    {user.role === 'teacher' && modules.length > 0 && (
+                        <div>
+                            <label className="mb-2 block text-sm font-medium text-gray-700">
+                                Modules taught
+                                <span className="ml-1 text-xs font-normal text-gray-400">
+                                    ({data.module_ids.length} selected)
+                                </span>
+                            </label>
+                            <div className="max-h-52 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
+                                {modules.map((m) => {
+                                    const checked = data.module_ids.includes(m.id);
+                                    return (
+                                        <label key={m.id}
+                                            className={`flex cursor-pointer items-center gap-3 px-3 py-2 transition hover:bg-gray-50 ${checked ? 'bg-blue-50' : ''}`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={checked}
+                                                onChange={() => toggleModule(m.id)}
+                                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            <span className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-blue-700">
+                                                {m.code}
+                                            </span>
+                                            <span className="text-sm text-gray-700">{m.name}</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                            {errors.module_ids && <p className="mt-1 text-xs text-red-500">{errors.module_ids}</p>}
+                        </div>
+                    )}
+
                     <div className="flex justify-end gap-3 pt-2">
                         <button type="button" onClick={onClose}
                             className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
@@ -213,7 +254,7 @@ function DeleteAction({ user }) {
 }
 
 /* ── Main page ───────────────────────────────────────────────────────── */
-export default function Users({ users, filters, specializations = [], semesters = [] }) {
+export default function Users({ users, filters, specializations = [], semesters = [], modules = [] }) {
     const { flash } = usePage().props;
     const [search, setSearch]   = useState(filters.search ?? '');
     const [role, setRole]       = useState(filters.role ?? '');
@@ -264,6 +305,7 @@ export default function Users({ users, filters, specializations = [], semesters 
                     user={editing}
                     specializations={specializations}
                     semesters={semesters}
+                    modules={modules}
                     onClose={() => setEditing(null)}
                 />
             )}

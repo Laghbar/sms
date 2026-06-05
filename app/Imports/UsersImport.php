@@ -36,6 +36,40 @@ class UsersImport implements ToCollection, WithHeadingRow, WithValidation
                 ]
             );
 
+            if ($this->role === 'teacher') {
+                // Accept: "modules", "module_taught", "module" column headers
+                $rawModules = trim(
+                    $row['modules']       ??
+                    $row['module_taught'] ??
+                    $row['module']        ??
+                    ''
+                );
+
+                if ($rawModules !== '') {
+                    $names = array_filter(array_map('trim', explode(',', $rawModules)));
+
+                    foreach ($names as $name) {
+                        // Try to find by code first, then by name (case-insensitive)
+                        $module = Module::where('code', strtoupper($name))
+                            ->orWhereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+                            ->first();
+
+                        // Auto-create if not found so no assignment is lost
+                        if (! $module) {
+                            $module = Module::create([
+                                'name'        => $name,
+                                'code'        => strtoupper(str_replace(' ', '-', preg_replace('/[^A-Za-z0-9\s]/', '', $name))),
+                                'coefficient' => 1,
+                                'semester'    => 1,
+                            ]);
+                        }
+
+                        $module->update(['teacher_id' => $user->id]);
+                        $module->teachers()->syncWithoutDetaching([$user->id]);
+                    }
+                }
+            }
+
             if ($this->role === 'student') {
                 $code    = strtoupper(trim($row['specialization'] ?? ''));
                 $semName = strtoupper(trim($row['semester'] ?? ''));
@@ -45,10 +79,10 @@ class UsersImport implements ToCollection, WithHeadingRow, WithValidation
 
                     if ($spec) {
                         // Use the exact semester name if provided (e.g. S2, S4),
-                        // otherwise fall back to the first semester (S1).
+                        // otherwise fall back to the last semester (S2 or S4) — end of academic year.
                         $semester = $semName !== ''
                             ? $spec->semesters()->where('name', $semName)->first()
-                            : $spec->semesters()->orderBy('name')->first();
+                            : $spec->semesters()->orderBy('name')->get()->last();
 
                         if ($semester) {
                             $user->update([
@@ -75,6 +109,12 @@ class UsersImport implements ToCollection, WithHeadingRow, WithValidation
             '*.name'  => ['required', 'string', 'max:255'],
             '*.email' => ['required', 'email', 'max:255'],
         ];
+
+        if ($this->role === 'teacher') {
+            $rules['*.modules']       = ['nullable', 'string', 'max:1000'];
+            $rules['*.module_taught'] = ['nullable', 'string', 'max:1000'];
+            $rules['*.module']        = ['nullable', 'string', 'max:1000'];
+        }
 
         if ($this->role === 'student') {
             $rules['*.specialization'] = ['nullable', 'string', 'max:20'];

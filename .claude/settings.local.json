@@ -13,7 +13,10 @@
       "Bash(move \"2026_06_04_134510_add_academic_fields_to_modules_table.php\" \"2026_06_04_134511_add_academic_fields_to_modules_table.php\")",
       "Bash(move \"2026_06_04_134511_add_academic_fields_to_users_table.php\" \"2026_06_04_134512_add_academic_fields_to_users_table.php\")",
       "Bash(move \"2026_06_04_134512_create_grades_table.php\" \"2026_06_04_134513_create_grades_table.php\")",
-      "Bash(findstr /i \"MAIL\")"
+      "Bash(findstr /i \"MAIL\")",
+      "Bash(ls -la \"c:\\\\Users\\\\PC\\\\sms\\\\\" | head -20)",
+      "Read(//c/Users/PC/**)",
+      "Bash(findstr /i \"MAIL_\" C:\\\\Users\\\\PC\\\\sms\\\\.env)"
     ]
   }
 }

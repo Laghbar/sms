@@ -9,6 +9,7 @@ use App\Models\Module;
 use App\Models\Semester;
 use App\Models\Specialization;
 use App\Models\User;
+use Illuminate\Support\Arr;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -100,11 +101,16 @@ class AdminController extends Controller
 
         $semesters = Semester::orderBy('name')->get(['id', 'specialization_id', 'name']);
 
+        $modules = Module::with('specialization:id,code')
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'specialization_id']);
+
         return Inertia::render('Admin/Users', [
             'users'           => $users,
             'filters'         => $request->only('search', 'role', 'specialization_id', 'semester_id'),
             'specializations' => $specializations,
             'semesters'       => $semesters,
+            'modules'         => $modules,
         ]);
     }
 
@@ -116,16 +122,34 @@ class AdminController extends Controller
             'name'              => ['required', 'string', 'max:255'],
             'specialization_id' => ['nullable', 'exists:specializations,id'],
             'semester_id'       => ['nullable', 'exists:semesters,id'],
+            'module_ids'        => ['nullable', 'array'],
+            'module_ids.*'      => ['exists:modules,id'],
         ]);
 
-        $user->update($validated);
+        $user->update(Arr::only($validated, ['name', 'specialization_id', 'semester_id']));
 
-        // Auto-enrol student in the modules for the new specialization/semester
-        if ($user->isStudent() && $validated['specialization_id'] && $validated['semester_id']) {
+        // Auto-enrol student in modules for the new specialization/semester
+        if ($user->isStudent() && ($validated['specialization_id'] ?? null) && ($validated['semester_id'] ?? null)) {
             Module::where('specialization_id', $validated['specialization_id'])
                 ->where('semester_id', $validated['semester_id'])
                 ->get()
                 ->each(fn ($m) => $m->students()->syncWithoutDetaching([$user->id]));
+        }
+
+        // Sync teacher modules
+        if ($user->isTeacher()) {
+            $moduleIds = $validated['module_ids'] ?? [];
+
+            // Remove teacher_id from modules no longer assigned
+            Module::where('teacher_id', $user->id)
+                ->whereNotIn('id', $moduleIds)
+                ->update(['teacher_id' => null]);
+
+            // Assign teacher_id to newly selected modules
+            Module::whereIn('id', $moduleIds)->update(['teacher_id' => $user->id]);
+
+            // Sync pivot table
+            $user->taughtModules()->sync($moduleIds);
         }
 
         return back()->with('success', "User \"{$user->name}\" updated.");

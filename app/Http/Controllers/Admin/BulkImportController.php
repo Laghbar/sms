@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\UsersTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Imports\UsersImport;
+use App\Models\Module;
 use App\Models\Specialization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,8 +27,11 @@ class BulkImportController extends Controller
                 'semesters' => $s->semesters->pluck('name'),
             ]);
 
+        $modules = Module::orderBy('code')->get(['id', 'code', 'name']);
+
         return Inertia::render('Admin/BulkImport', [
             'specializations' => $specializations,
+            'modules'         => $modules,
         ]);
     }
 

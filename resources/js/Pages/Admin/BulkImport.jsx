@@ -31,7 +31,7 @@ function RoleCard({ role, label, description, icon, color, selected, onSelect })
     );
 }
 
-export default function BulkImport({ specializations = [] }) {
+export default function BulkImport({ specializations = [], modules = [] }) {
     const { flash } = usePage().props;
     const [selectedRole, setSelectedRole] = useState(null);
     const { data, setData, post, processing, errors, reset, progress } = useForm({
@@ -62,8 +62,12 @@ export default function BulkImport({ specializations = [] }) {
 
     const isStudent = selectedRole === 'student';
 
+    const isTeacher = selectedRole === 'teacher';
+
     const exampleHeaders = isStudent
-        ? ['name', 'email', 'password', 'specialization']
+        ? ['name', 'email', 'password', 'specialization', 'semester']
+        : isTeacher
+        ? ['name', 'email', 'password', 'modules']
         : ['name', 'email', 'password'];
 
     return (
@@ -139,7 +143,9 @@ export default function BulkImport({ specializations = [] }) {
                                 </div>
 
                                 <p className="mt-2 text-xs text-gray-400">
-                                    <em>password</em> is optional — a random one is generated automatically if omitted.
+                                    <em>password</em> is optional — a random one is generated if omitted.
+                                    {isStudent && (<><br /><em>semester</em> is optional — defaults to <strong>S2</strong> or <strong>S4</strong> (end of year) if omitted.</>)}
+                                    {isTeacher && (<><br /><em>modules</em> is optional — comma-separated module codes, e.g. <strong>GI-ALG-S1, GI-MATH-S1</strong>.</>)}
                                 </p>
 
                                 {/* Specialization codes — only for students */}
@@ -160,6 +166,28 @@ export default function BulkImport({ specializations = [] }) {
                                         </div>
                                         <p className="mt-1.5 text-xs text-gray-400">
                                             Leave blank to import without academic assignment.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Module codes — only for teachers */}
+                                {isTeacher && modules.length > 0 && (
+                                    <div className="mt-3 border-t border-gray-200 pt-3">
+                                        <p className="mb-1.5 text-xs font-semibold text-gray-500">
+                                            Available <span className="font-mono">modules</span> codes:
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {modules.map((m) => (
+                                                <div key={m.id} className="flex items-center gap-1.5">
+                                                    <span className="rounded bg-blue-600 px-1.5 py-0.5 font-mono text-xs font-bold text-white">
+                                                        {m.code}
+                                                    </span>
+                                                    <span className="text-xs text-gray-600">{m.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p className="mt-1.5 text-xs text-gray-400">
+                                            Separate multiple codes with a comma. Leave blank to import without module assignment.
                                         </p>
                                     </div>
                                 )}

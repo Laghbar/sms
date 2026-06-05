@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\Grade;
 use App\Models\Module;
+use App\Models\Specialization;
 use App\Models\User;
 use App\Notifications\ResultsPublished;
 use Illuminate\Http\Request;
@@ -15,9 +16,14 @@ use Inertia\Response;
 
 class ResultController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $specId = $request->specialization_id;
+
+        $specializations = Specialization::orderBy('name')->get(['id', 'name', 'code']);
+
         $modules = Module::with(['teacher:id,name', 'semesterObj:id,name', 'specialization:id,name'])
+            ->when($specId, fn ($q) => $q->where('specialization_id', $specId))
             ->orderBy('name')
             ->get()
             ->map(function (Module $module) {
@@ -80,6 +86,7 @@ class ResultController extends Controller
             $coefMap   = $publishedModules->keyBy('id');
 
             $classRanking = User::where('role', Role::Student)
+                ->when($specId, fn ($q) => $q->where('specialization_id', $specId))
                 ->get(['id', 'name'])
                 ->map(function (User $s) use ($allGrades, $coefMap) {
                     $sGrades = $allGrades->where('student_id', $s->id);
@@ -104,8 +111,10 @@ class ResultController extends Controller
         }
 
         return Inertia::render('Admin/Results', [
-            'modules'       => $modules,
-            'class_ranking' => $classRanking,
+            'modules'         => $modules,
+            'class_ranking'   => $classRanking,
+            'specializations' => $specializations,
+            'filters'         => ['specialization_id' => $specId],
         ]);
     }
 

@@ -2,6 +2,37 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
+function SpecializationSelector({ specializations, selected, onChange }) {
+    return (
+        <div className="flex flex-wrap items-center gap-2">
+            <button
+                onClick={() => onChange('')}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                    !selected
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600'
+                }`}
+            >
+                All
+            </button>
+            {specializations.map((s) => (
+                <button
+                    key={s.id}
+                    onClick={() => onChange(s.id)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                        String(selected) === String(s.id)
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600'
+                    }`}
+                >
+                    <span className="font-mono font-bold">{s.code}</span>
+                    <span className="ml-1.5 hidden sm:inline text-xs opacity-80">{s.name}</span>
+                </button>
+            ))}
+        </div>
+    );
+}
+
 function GradeInput({ value, onChange }) {
     const num = value !== '' && value !== null ? parseFloat(value) : null;
     return (
@@ -254,12 +285,23 @@ function ModuleCard({ module }) {
     );
 }
 
-export default function Results({ modules, class_ranking }) {
+export default function Results({ modules, class_ranking, specializations = [], filters = {} }) {
     const [rankingExpanded, setRankingExpanded] = useState(false);
+
+    const selectedSpec = filters.specialization_id ?? '';
+
+    function handleSpecChange(id) {
+        router.get(route('admin.results.index'), { specialization_id: id || undefined }, {
+            preserveState: true,
+            replace: true,
+        });
+    }
 
     const publishedCount = modules.filter((m) => m.is_published).length;
     const totalModules   = modules.length;
     const totalStudents  = class_ranking.length;
+
+    const selectedSpecName = specializations.find((s) => String(s.id) === String(selectedSpec))?.name ?? null;
 
     return (
         <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Results Management</h2>}>
@@ -267,6 +309,20 @@ export default function Results({ modules, class_ranking }) {
 
             <div className="py-8">
                 <div className="mx-auto max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
+
+                    {/* ── Specialization filter ── */}
+                    {specializations.length > 0 && (
+                        <div className="rounded-xl bg-white px-5 py-4 shadow-sm">
+                            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                Filter by Specialization
+                            </p>
+                            <SpecializationSelector
+                                specializations={specializations}
+                                selected={selectedSpec}
+                                onChange={handleSpecChange}
+                            />
+                        </div>
+                    )}
 
                     {/* ── Summary stats ── */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -285,7 +341,14 @@ export default function Results({ modules, class_ranking }) {
 
                     {/* ── Module cards ── */}
                     <div>
-                        <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-400">Modules</h2>
+                        <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-400">
+                            Modules
+                            {selectedSpecName && (
+                                <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 normal-case tracking-normal">
+                                    {selectedSpecName}
+                                </span>
+                            )}
+                        </h2>
                         <div className="space-y-4">
                             {modules.length === 0 ? (
                                 <div className="rounded-xl bg-white p-10 text-center text-sm text-gray-400 shadow-sm">
