@@ -7,7 +7,10 @@ use App\Models\Exam;
 use App\Models\ExamTimetable;
 use App\Models\Module;
 use App\Models\Specialization;
+use App\Enums\Role;
+use App\Models\User;
 use App\Notifications\ExamAnnounced;
+use App\Notifications\ExamTimetableUploaded;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -109,7 +112,7 @@ class ExamController extends Controller
         $file = $request->file('file');
         $path = $file->store('exam-timetables', 'public');
 
-        ExamTimetable::create([
+        $timetable = ExamTimetable::create([
             'uploaded_by'       => $request->user()->id,
             'specialization_id' => $request->specialization_id ?: null,
             'title'             => $request->title,
@@ -119,7 +122,20 @@ class ExamController extends Controller
             'mime_type'         => $file->getMimeType(),
         ]);
 
-        return back()->with('success', 'Timetable uploaded successfully.');
+        $timetable->load('specialization');
+
+        // Notify students in the selected specialization (or all students if none selected)
+        $studentsQuery = User::where('role', Role::Student);
+        if ($request->specialization_id) {
+            $studentsQuery->where('specialization_id', $request->specialization_id);
+        }
+        $students = $studentsQuery->get();
+
+        if ($students->isNotEmpty()) {
+            Notification::send($students, new ExamTimetableUploaded($timetable));
+        }
+
+        return back()->with('success', "Timetable uploaded and {$students->count()} student(s) notified.");
     }
 
     public function deleteTimetable(ExamTimetable $timetable)

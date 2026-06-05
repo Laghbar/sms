@@ -19,6 +19,7 @@ function NotificationIcon({ type }) {
         comment_reply:           '↩️',
         stage_folder_requested:  '📁',
         stage_folder_ready:      '✅',
+        exam_timetable:          '🗓️',
     };
     return (
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-base">
@@ -110,6 +111,19 @@ function NotificationContent({ n }) {
                     {n.data.end_time   && ` – ${n.data.end_time}`}
                 </p>
                 {n.data.location && <p className="text-xs text-gray-500">📍 {n.data.location}</p>}
+            </>
+        );
+    }
+
+    if (type === 'exam_timetable') {
+        return (
+            <>
+                <p className="text-xs font-semibold text-indigo-600">Calendrier des examens</p>
+                <p className="mt-0.5 text-sm font-medium text-gray-900">{n.data.title}</p>
+                {n.data.specialization && (
+                    <p className="text-xs text-gray-500">{n.data.specialization}</p>
+                )}
+                <p className="mt-0.5 text-xs text-gray-500">{n.data.message}</p>
             </>
         );
     }

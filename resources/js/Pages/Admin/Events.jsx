@@ -49,7 +49,6 @@ function EventForm({ event, onClose }) {
         ends_at:          toInput(event?.ends_at),
         max_participants: event?.max_participants ?? '',
         image:            null,
-        notify_students:  false,
     });
 
     function handleImage(e) {
@@ -122,15 +121,6 @@ function EventForm({ event, onClose }) {
                 {err('image')}
             </div>
 
-            {!isEdit && (
-                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
-                    <input type="checkbox" checked={data.notify_students} onChange={(e) => setData('notify_students', e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-indigo-600" />
-                    <div>
-                        <p className="text-sm font-medium text-gray-700">Notify all students by email</p>
-                        <p className="text-xs text-gray-400">Send an announcement email to every student</p>
-                    </div>
-                </label>
-            )}
 
             <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
