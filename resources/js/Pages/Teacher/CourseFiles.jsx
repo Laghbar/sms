@@ -1,5 +1,5 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useCallback, useState } from 'react';
 
 function formatSize(bytes) {
@@ -317,6 +317,16 @@ export default function CourseFiles({ files, modules, filters }) {
                                                         )}
                                                         <td className="px-6 py-4 text-right">
                                                             <div className="flex items-center justify-end gap-2">
+                                                                <Link
+                                                                    href={f.discussion_url}
+                                                                    className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100"
+                                                                    title="View discussion"
+                                                                >
+                                                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                                    </svg>
+                                                                    {f.comments_count}
+                                                                </Link>
                                                                 <a href={f.download_url} className="rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50">
                                                                     Download
                                                                 </a>

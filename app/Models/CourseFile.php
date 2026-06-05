@@ -39,4 +39,9 @@ class CourseFile extends Model
     {
         return $this->hasMany(TpSubmission::class);
     }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(CourseFileComment::class);
+    }
 }

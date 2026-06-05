@@ -18,7 +18,7 @@ class CourseFileController extends Controller
 
         $files = CourseFile::whereIn('module_id', $moduleIds)
             ->with('module:id,name,code')
-            ->withCount('submissions')
+            ->withCount(['submissions', 'comments'])
             ->when($request->module_id, fn ($q) => $q->where('module_id', $request->module_id))
             ->when($request->type,      fn ($q) => $q->where('type', $request->type))
             ->orderByDesc('created_at')
@@ -36,6 +36,8 @@ class CourseFileController extends Controller
                 'download_url'      => route('teacher.course-files.download', $f->id),
                 'submissions_count' => $f->submissions_count,
                 'submissions_url'   => route('teacher.course-files.submissions', $f->id),
+                'comments_count'    => $f->comments_count,
+                'discussion_url'    => route('teacher.course-files.discussion', $f->id),
             ]);
 
         $modules = $teacher->taughtModules()->orderBy('semester')->get(['modules.id', 'modules.name', 'modules.code']);
@@ -88,7 +90,6 @@ class CourseFileController extends Controller
             abort(403);
         }
 
-        // Delete all student submission files too
         foreach ($courseFile->submissions as $sub) {
             Storage::disk('public')->delete($sub->file_path);
         }
@@ -151,5 +152,62 @@ class CourseFileController extends Controller
         }
 
         return Storage::disk('public')->download($submission->file_path, $submission->file_name);
+    }
+
+    public function discussion(Request $request, CourseFile $courseFile): Response
+    {
+        $moduleIds = $request->user()->taughtModules()->pluck('modules.id');
+
+        if (! $moduleIds->contains($courseFile->module_id)) {
+            abort(403);
+        }
+
+        $comments = $courseFile->comments()
+            ->whereNull('parent_id')
+            ->with([
+                'user:id,name,role',
+                'replies' => fn ($q) => $q->with('user:id,name,role'),
+            ])
+            ->orderBy('created_at')
+            ->get()
+            ->map(fn ($c) => $this->formatComment($c));
+
+        return Inertia::render('Teacher/CourseFileDiscussion', [
+            'courseFile' => [
+                'id'          => $courseFile->id,
+                'title'       => $courseFile->title,
+                'type'        => $courseFile->type,
+                'module'      => $courseFile->module()->select('id', 'name', 'code')->first(),
+                'store_url'   => route('teacher.course-file-comments.store', $courseFile->id),
+                'files_url'   => route('teacher.course-files.index'),
+            ],
+            'comments'   => $comments,
+        ]);
+    }
+
+    private function formatComment($c): array
+    {
+        return [
+            'id'         => $c->id,
+            'body'       => $c->body,
+            'created_at' => $c->created_at->diffForHumans(),
+            'user'       => [
+                'id'   => $c->user->id,
+                'name' => $c->user->name,
+                'role' => $c->user->role->value,
+            ],
+            'delete_url' => route('teacher.course-file-comments.destroy', $c->id),
+            'replies'    => $c->replies->map(fn ($r) => [
+                'id'         => $r->id,
+                'body'       => $r->body,
+                'created_at' => $r->created_at->diffForHumans(),
+                'user'       => [
+                    'id'   => $r->user->id,
+                    'name' => $r->user->name,
+                    'role' => $r->user->role->value,
+                ],
+                'delete_url' => route('teacher.course-file-comments.destroy', $r->id),
+            ])->values(),
+        ];
     }
 }

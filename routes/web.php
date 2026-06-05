@@ -10,11 +10,13 @@ use App\Http\Controllers\Admin\ResultController as AdminResultController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Teacher\CourseFileController as TeacherCourseFileController;
+use App\Http\Controllers\Teacher\CourseFileCommentController as TeacherCourseFileCommentController;
 use App\Http\Controllers\Teacher\EventController as TeacherEventController;
 use App\Http\Controllers\Teacher\ResultController as TeacherResultController;
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Teacher\TpController;
 use App\Http\Controllers\Student\CourseFileController as StudentCourseFileController;
+use App\Http\Controllers\Student\CourseFileCommentController as StudentCourseFileCommentController;
 use App\Http\Controllers\Student\TpSubmissionController;
 use App\Http\Controllers\Student\EventController as StudentEventController;
 use App\Http\Controllers\Student\StudentController;
@@ -99,6 +101,9 @@ Route::middleware(['auth', 'verified', 'teacher'])->prefix('teacher')->name('tea
     Route::get('/course-files/{courseFile}/download',                  [TeacherCourseFileController::class, 'download'])->name('course-files.download');
     Route::get('/course-files/{courseFile}/submissions',               [TeacherCourseFileController::class, 'submissions'])->name('course-files.submissions');
     Route::get('/tp-submissions/{submission}/download',                [TeacherCourseFileController::class, 'submissionDownload'])->name('course-files.submission-download');
+    Route::get('/course-files/{courseFile}/discussion',                [TeacherCourseFileController::class, 'discussion'])->name('course-files.discussion');
+    Route::post('/course-files/{courseFile}/comments',                 [TeacherCourseFileCommentController::class, 'store'])->name('course-file-comments.store');
+    Route::delete('/course-file-comments/{comment}',                   [TeacherCourseFileCommentController::class, 'destroy'])->name('course-file-comments.destroy');
 });
 
 // ── Student ────────────────────────────────────────────────────────────────
@@ -112,11 +117,13 @@ Route::middleware(['auth', 'verified', 'student'])->prefix('student')->name('stu
     Route::post('/events/{event}/register',        [StudentEventController::class, 'register'])->name('events.register');
     Route::delete('/events/{event}/register',      [StudentEventController::class, 'unregister'])->name('events.unregister');
 
-    Route::get('/course-files',                       [StudentCourseFileController::class, 'index'])->name('course-files.index');
-    Route::get('/course-files/{courseFile}/download', [StudentCourseFileController::class, 'download'])->name('course-files.download');
-
-    Route::post('/course-files/{courseFile}/submission',  [TpSubmissionController::class, 'store'])->name('tp-submissions.store');
-    Route::delete('/tp-submissions/{submission}',         [TpSubmissionController::class, 'destroy'])->name('tp-submissions.destroy');
+    Route::get('/course-files',                                        [StudentCourseFileController::class, 'index'])->name('course-files.index');
+    Route::get('/course-files/{courseFile}/download',                  [StudentCourseFileController::class, 'download'])->name('course-files.download');
+    Route::get('/course-files/{courseFile}/discussion',                [StudentCourseFileController::class, 'discussion'])->name('course-files.discussion');
+    Route::post('/course-files/{courseFile}/submission',               [TpSubmissionController::class, 'store'])->name('tp-submissions.store');
+    Route::delete('/tp-submissions/{submission}',                      [TpSubmissionController::class, 'destroy'])->name('tp-submissions.destroy');
+    Route::post('/course-files/{courseFile}/comments',                 [StudentCourseFileCommentController::class, 'store'])->name('course-file-comments.store');
+    Route::delete('/course-file-comments/{comment}',                   [StudentCourseFileCommentController::class, 'destroy'])->name('course-file-comments.destroy');
 });
 
 // ── Profile & notifications ────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import StudentLayout from '@/Layouts/StudentLayout';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useCallback, useRef, useState } from 'react';
 
 const TYPE_COLORS = {
@@ -227,21 +227,32 @@ export default function CourseFiles({ files, modules, filters }) {
                                                 </div>
                                             </div>
 
-                                            {/* Download footer */}
+                                            {/* Download + discussion footer */}
                                             <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-5 py-3">
                                                 <div className="text-xs text-gray-400">
-                                                    <p className="truncate max-w-[130px]">{f.file_name}</p>
+                                                    <p className="truncate max-w-[110px]">{f.file_name}</p>
                                                     <p>{formatSize(f.file_size)}</p>
                                                 </div>
-                                                <a
-                                                    href={f.download_url}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
-                                                >
-                                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                    </svg>
-                                                    Download
-                                                </a>
+                                                <div className="flex items-center gap-2">
+                                                    <Link
+                                                        href={f.discussion_url}
+                                                        className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100"
+                                                    >
+                                                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                        </svg>
+                                                        {f.comments_count}
+                                                    </Link>
+                                                    <a
+                                                        href={f.download_url}
+                                                        className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
+                                                    >
+                                                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                        </svg>
+                                                        Download
+                                                    </a>
+                                                </div>
                                             </div>
 
                                             {/* TP submission panel */}
