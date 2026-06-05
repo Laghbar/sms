@@ -114,6 +114,35 @@ class AdminController extends Controller
         ]);
     }
 
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name'              => ['required', 'string', 'max:255'],
+            'email'             => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password'          => ['required', 'string', 'min:8', 'confirmed'],
+            'specialization_id' => ['required', 'exists:specializations,id'],
+            'semester_id'       => ['required', 'exists:semesters,id'],
+        ]);
+
+        $student = User::create([
+            'name'              => $validated['name'],
+            'email'             => $validated['email'],
+            'password'          => \Illuminate\Support\Facades\Hash::make($validated['password']),
+            'role'              => Role::Student,
+            'email_verified_at' => now(),
+            'specialization_id' => $validated['specialization_id'],
+            'semester_id'       => $validated['semester_id'],
+        ]);
+
+        // Auto-enroll in all modules for the chosen specialization + semester
+        Module::where('specialization_id', $validated['specialization_id'])
+            ->where('semester_id', $validated['semester_id'])
+            ->get()
+            ->each(fn ($m) => $m->students()->syncWithoutDetaching([$student->id]));
+
+        return back()->with('success', "Student \"{$student->name}\" created and enrolled in modules.");
+    }
+
     public function update(Request $request, User $user): RedirectResponse
     {
         abort_if($user->isAdmin(), 403);

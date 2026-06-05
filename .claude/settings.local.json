@@ -30,7 +30,8 @@
       "Bash(del \"C:\\\\Users\\\\PC\\\\sms\\\\app\\\\Notifications\\\\AccountCreated.php\")",
       "Bash(del \"C:\\\\Users\\\\PC\\\\sms\\\\database\\\\seeders\\\\ScheduleSeeder.php\")",
       "Bash(del \"C:\\\\Users\\\\PC\\\\sms\\\\database\\\\seeders\\\\ExtendedDataSeeder.php\")",
-      "Bash(del \"C:\\\\Users\\\\PC\\\\sms\\\\database\\\\seeders\\\\GBAgcDataSeeder.php\")"
+      "Bash(del \"C:\\\\Users\\\\PC\\\\sms\\\\database\\\\seeders\\\\GBAgcDataSeeder.php\")",
+      "Bash(npm run *)"
     ]
   }
 }

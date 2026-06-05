@@ -76,6 +76,113 @@ function Pagination({ links }) {
     );
 }
 
+/* ── Create Student modal ────────────────────────────────────────────── */
+function CreateStudentModal({ specializations, semesters, onClose }) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        name:              '',
+        email:             '',
+        password:          '',
+        password_confirmation: '',
+        specialization_id: '',
+        semester_id:       '',
+    });
+
+    const filteredSemesters = data.specialization_id
+        ? semesters.filter((s) => String(s.specialization_id) === String(data.specialization_id))
+        : [];
+
+    function handleSpecChange(val) {
+        setData((prev) => ({ ...prev, specialization_id: val, semester_id: '' }));
+    }
+
+    function submit(e) {
+        e.preventDefault();
+        post(route('admin.users.store'), {
+            onSuccess: () => { reset(); onClose(); },
+        });
+    }
+
+    const field = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400';
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
+            <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                <h3 className="mb-1 text-base font-semibold text-gray-900">Create Student</h3>
+                <p className="mb-5 text-xs text-gray-400">The student will be automatically enrolled in all modules of the selected semester.</p>
+
+                <form onSubmit={submit} className="space-y-4">
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Full Name</label>
+                        <input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)}
+                            placeholder="e.g. Ahmed Benali" className={field} autoFocus />
+                        {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" value={data.email} onChange={(e) => setData('email', e.target.value)}
+                            placeholder="student@sms.com" className={field} />
+                        {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-gray-700">Password</label>
+                            <input type="password" value={data.password} onChange={(e) => setData('password', e.target.value)}
+                                placeholder="Min. 8 characters" className={field} />
+                            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
+                        </div>
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-gray-700">Confirm Password</label>
+                            <input type="password" value={data.password_confirmation} onChange={(e) => setData('password_confirmation', e.target.value)}
+                                placeholder="Repeat password" className={field} />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Specialization</label>
+                        <select value={data.specialization_id} onChange={(e) => handleSpecChange(e.target.value)} className={field}>
+                            <option value="">— Select specialization —</option>
+                            {specializations.map((s) => (
+                                <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
+                            ))}
+                        </select>
+                        {errors.specialization_id && <p className="mt-1 text-xs text-red-500">{errors.specialization_id}</p>}
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Semester</label>
+                        <select value={data.semester_id} onChange={(e) => setData('semester_id', e.target.value)}
+                            className={field} disabled={!data.specialization_id}>
+                            <option value="">— Select semester —</option>
+                            {filteredSemesters.map((s) => (
+                                <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                        </select>
+                        {errors.semester_id && <p className="mt-1 text-xs text-red-500">{errors.semester_id}</p>}
+                        {data.specialization_id && data.semester_id && (
+                            <p className="mt-1 text-xs text-indigo-500">
+                                Student will be auto-enrolled in all modules for this semester.
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button type="button" onClick={onClose}
+                            className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" disabled={processing}
+                            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60">
+                            {processing ? 'Creating…' : 'Create Student'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
 /* ── Edit modal ──────────────────────────────────────────────────────── */
 function EditModal({ user, specializations, semesters, modules, onClose }) {
     const { data, setData, patch, processing, errors } = useForm({
@@ -260,7 +367,8 @@ export default function Users({ users, filters, specializations = [], semesters 
     const [role, setRole]       = useState(filters.role ?? '');
     const [specId, setSpecId]   = useState(filters.specialization_id ?? '');
     const [semId, setSemId]     = useState(filters.semester_id ?? '');
-    const [editing, setEditing] = useState(null);
+    const [editing, setEditing]   = useState(null);
+    const [creating, setCreating] = useState(false);
 
     const apply = useCallback((s, r, sp, sm) => {
         router.get(route('admin.users'), {
@@ -299,6 +407,14 @@ export default function Users({ users, filters, specializations = [], semesters 
     return (
         <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Users</h2>}>
             <Head title="Users" />
+
+            {creating && (
+                <CreateStudentModal
+                    specializations={specializations}
+                    semesters={semesters}
+                    onClose={() => setCreating(false)}
+                />
+            )}
 
             {editing && (
                 <EditModal
@@ -398,9 +514,20 @@ export default function Users({ users, filters, specializations = [], semesters 
                             </button>
                         )}
 
-                        <p className="ml-auto shrink-0 text-sm text-gray-500">
-                            {users.total} user{users.total !== 1 ? 's' : ''}
-                        </p>
+                        <div className="ml-auto flex items-center gap-3">
+                            <p className="shrink-0 text-sm text-gray-500">
+                                {users.total} user{users.total !== 1 ? 's' : ''}
+                            </p>
+                            <button
+                                onClick={() => setCreating(true)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700"
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                </svg>
+                                New Student
+                            </button>
+                        </div>
                     </div>
 
                     {/* Table */}
