@@ -24,7 +24,8 @@ export default function StudentLayout({ header, children }) {
                             </div>
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink href={route('student.dashboard')} active={route().current('student.dashboard')}>Dashboard</NavLink>
-                                <NavLink href={route('student.results')}   active={route().current('student.results')}>Results</NavLink>
+                                <NavLink href={route('student.results')}           active={route().current('student.results')}>Results</NavLink>
+                                <NavLink href={route('student.attendance.index')} active={route().current('student.attendance.*')}>Attendance</NavLink>
                                 <NavLink href={route('student.schedule')}  active={route().current('student.schedule')}>Emploi du Temps</NavLink>
                                 <NavLink href={route('student.course-files.index')} active={route().current('student.course-files.index')}>Course Files</NavLink>
                                 <NavLink href={route('student.stage-folder.index')} active={route().current('student.stage-folder.index')}>Stage Folder</NavLink>
@@ -74,7 +75,8 @@ export default function StudentLayout({ header, children }) {
                 <div className={(open ? 'block' : 'hidden') + ' sm:hidden'}>
                     <div className="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink href={route('student.dashboard')} active={route().current('student.dashboard')}>Dashboard</ResponsiveNavLink>
-                        <ResponsiveNavLink href={route('student.results')}   active={route().current('student.results')}>Results</ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('student.results')}           active={route().current('student.results')}>Results</ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('student.attendance.index')} active={route().current('student.attendance.*')}>Attendance</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('student.schedule')}  active={route().current('student.schedule')}>Emploi du Temps</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('student.course-files.index')} active={route().current('student.course-files.index')}>Course Files</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('student.stage-folder.index')} active={route().current('student.stage-folder.index')}>Stage Folder</ResponsiveNavLink>

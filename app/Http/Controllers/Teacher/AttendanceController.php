@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\Module;
 use Illuminate\Http\Request;
@@ -98,17 +99,20 @@ class AttendanceController extends Controller
 
         $markedBy = $request->user()->id;
 
+        $yearId = AcademicYear::currentId();
+
         foreach ($validated['records'] as $record) {
             Attendance::updateOrCreate(
                 [
-                    'module_id'    => $module->id,
-                    'student_id'   => $record['student_id'],
-                    'session_date' => $validated['date'],
+                    'module_id'        => $module->id,
+                    'student_id'       => $record['student_id'],
+                    'session_date'     => $validated['date'],
                 ],
                 [
-                    'status'    => $record['status'],
-                    'note'      => $record['note'] ?? null,
-                    'marked_by' => $markedBy,
+                    'status'           => $record['status'],
+                    'note'             => $record['note'] ?? null,
+                    'marked_by'        => $markedBy,
+                    'academic_year_id' => $yearId,
                 ]
             );
         }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\Grade;
 use App\Models\Module;
 use App\Models\Semester;
@@ -163,10 +164,13 @@ class AdminController extends Controller
         ]);
 
         if ($role === 'student') {
+            $yearId = AcademicYear::currentId();
             Module::where('specialization_id', $validated['specialization_id'])
                 ->where('semester_id', $validated['semester_id'])
                 ->get()
-                ->each(fn ($m) => $m->students()->syncWithoutDetaching([$user->id]));
+                ->each(fn ($m) => $m->students()->syncWithoutDetaching([
+                    $user->id => ['academic_year_id' => $yearId],
+                ]));
 
             return back()->with('success', "Student \"{$user->name}\" created and enrolled in modules.");
         }
@@ -197,10 +201,13 @@ class AdminController extends Controller
 
         // Auto-enrol student in modules for the new specialization/semester
         if ($user->isStudent() && ($validated['specialization_id'] ?? null) && ($validated['semester_id'] ?? null)) {
+            $yearId = AcademicYear::currentId();
             Module::where('specialization_id', $validated['specialization_id'])
                 ->where('semester_id', $validated['semester_id'])
                 ->get()
-                ->each(fn ($m) => $m->students()->syncWithoutDetaching([$user->id]));
+                ->each(fn ($m) => $m->students()->syncWithoutDetaching([
+                    $user->id => ['academic_year_id' => $yearId],
+                ]));
         }
 
         // Sync teacher modules

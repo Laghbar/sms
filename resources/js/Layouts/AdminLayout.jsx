@@ -95,7 +95,7 @@ export default function AdminLayout({ header, children }) {
 
     // Group active states
     const usersActive    = r('admin.users') || r('admin.bulk-import.*');
-    const academicActive = r('admin.modules.*') || r('admin.results.*') || r('admin.advancement.*') || r('admin.stage-folders.*');
+    const academicActive = r('admin.modules.*') || r('admin.results.*') || r('admin.advancement.*') || r('admin.stage-folders.*') || r('admin.academic-years.*');
     const planningActive = r('admin.schedules.*') || r('admin.exams.*') || r('admin.events.*');
 
     const userItems = [
@@ -107,7 +107,8 @@ export default function AdminLayout({ header, children }) {
         { href: route('admin.modules.index'),      icon: '📚', label: 'Modules',       desc: 'Create, edit & assign modules',  active: r('admin.modules.*') },
         { href: route('admin.results.index'),      icon: '📊', label: 'Results',       desc: 'Grades & publication',            active: r('admin.results.*') },
         { href: route('admin.advancement.index'),  icon: '🎓', label: 'Advancement',   desc: 'Advance students by semester',    active: r('admin.advancement.*') },
-        { href: route('admin.stage-folders.index'),icon: '📁', label: 'Stage Folders', desc: 'Internship folder requests',      active: r('admin.stage-folders.*') },
+        { href: route('admin.stage-folders.index'),   icon: '📁', label: 'Stage Folders',   desc: 'Internship folder requests',   active: r('admin.stage-folders.*') },
+        { href: route('admin.academic-years.index'), icon: '🎓', label: 'Années Univ.',   desc: 'Gérer les années universitaires', active: r('admin.academic-years.*') },
     ];
 
     const planningItems = [
@@ -191,7 +192,8 @@ export default function AdminLayout({ header, children }) {
                             <MobileNavItem href={route('admin.modules.index')}     active={r('admin.modules.*')}         icon="📚" label="Modules" />
                             <MobileNavItem href={route('admin.results.index')}     active={r('admin.results.*')}         icon="📊" label="Results" />
                             <MobileNavItem href={route('admin.advancement.index')}  active={r('admin.advancement.*')}     icon="🎓" label="Advancement" />
-                            <MobileNavItem href={route('admin.stage-folders.index')} active={r('admin.stage-folders.*')} icon="📁" label="Stage Folders" />
+                            <MobileNavItem href={route('admin.stage-folders.index')}   active={r('admin.stage-folders.*')}   icon="📁" label="Stage Folders" />
+                            <MobileNavItem href={route('admin.academic-years.index')} active={r('admin.academic-years.*')} icon="🎓" label="Années Univ." />
                             <MobileNavItem href={route('admin.schedules.index')}   active={r('admin.schedules.*')}       icon="🗓️" label="Schedules" />
                             <MobileNavItem href={route('admin.exams.index')}       active={r('admin.exams.*')}           icon="📋" label="Exams" />
                             <MobileNavItem href={route('admin.events.index')}      active={r('admin.events.*')}          icon="🎉" label={<>Events {new_events_count > 0 && <span className="ml-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{new_events_count}</span>}</>} />

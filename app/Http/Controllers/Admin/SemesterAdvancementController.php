@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\Grade;
 use App\Models\Module;
 use App\Models\Semester;
@@ -60,10 +61,13 @@ class SemesterAdvancementController extends Controller
                         continue; // stays in current semester
                     }
 
+                    $yearId = AcademicYear::currentId();
                     $student->update(['semester_id' => $toSem->id]);
                     $student->enrolledModules()->detach($fromModules->pluck('id')->all());
                     foreach ($toModules as $module) {
-                        $module->students()->syncWithoutDetaching([$student->id]);
+                        $module->students()->syncWithoutDetaching([
+                            $student->id => ['academic_year_id' => $yearId],
+                        ]);
                     }
                     $totalAdvanced++;
                 }

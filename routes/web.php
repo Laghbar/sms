@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AcademicYearController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BulkImportController;
 use App\Http\Controllers\Admin\SemesterAdvancementController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Teacher\TpController;
 use App\Http\Controllers\Student\CourseFileController as StudentCourseFileController;
 use App\Http\Controllers\Student\CourseFileCommentController as StudentCourseFileCommentController;
 use App\Http\Controllers\Student\TpSubmissionController;
+use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
 use App\Http\Controllers\Student\EventController as StudentEventController;
 use App\Http\Controllers\Student\StageFolderController as StudentStageFolderController;
 use App\Http\Controllers\Student\StudentController;
@@ -70,6 +72,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     Route::get('/advancement',  [SemesterAdvancementController::class, 'index'])->name('advancement.index');
     Route::post('/advancement', [SemesterAdvancementController::class, 'advance'])->name('advancement.advance');
+
+    Route::get('/academic-years',                              [AcademicYearController::class, 'index'])->name('academic-years.index');
+    Route::post('/academic-years',                             [AcademicYearController::class, 'store'])->name('academic-years.store');
+    Route::patch('/academic-years/{academicYear}/set-current', [AcademicYearController::class, 'setCurrent'])->name('academic-years.set-current');
+    Route::delete('/academic-years/{academicYear}',            [AcademicYearController::class, 'destroy'])->name('academic-years.destroy');
 
     Route::get('/stage-folders',                                          [AdminStageFolderController::class, 'index'])->name('stage-folders.index');
     Route::patch('/stage-folders/{stageFolderRequest}/status',            [AdminStageFolderController::class, 'updateStatus'])->name('stage-folders.status');
@@ -143,8 +150,9 @@ Route::middleware(['auth', 'verified', 'teacher'])->prefix('teacher')->name('tea
 
 // ── Student ────────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'verified', 'student'])->prefix('student')->name('student.')->group(function () {
-    Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
-    Route::get('/results',   [StudentController::class, 'results'])->name('results');
+    Route::get('/dashboard',   [StudentController::class, 'dashboard'])->name('dashboard');
+    Route::get('/results',     [StudentController::class, 'results'])->name('results');
+    Route::get('/attendance',  [StudentAttendanceController::class, 'index'])->name('attendance.index');
     Route::get('/schedule',  [StudentController::class, 'schedule'])->name('schedule');
     Route::get('/tps',       [StudentController::class, 'tps'])->name('tps');
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\Grade;
 use App\Models\Module;
 use App\Notifications\ResultsPublished;
@@ -77,7 +78,7 @@ class ResultController extends Controller
                 Grade::where('student_id', $studentId)->where('module_id', $module->id)->delete();
             } else {
                 Grade::updateOrCreate(
-                    ['student_id' => $studentId, 'module_id' => $module->id],
+                    ['student_id' => $studentId, 'module_id' => $module->id, 'academic_year_id' => AcademicYear::currentId()],
                     ['grade' => $grade]
                 );
             }
