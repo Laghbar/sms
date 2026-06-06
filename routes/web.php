@@ -173,10 +173,11 @@ Route::middleware(['auth', 'verified', 'student'])->prefix('student')->name('stu
     Route::post('/course-files/{courseFile}/comments',                 [StudentCourseFileCommentController::class, 'store'])->name('course-file-comments.store');
     Route::delete('/course-file-comments/{comment}',                   [StudentCourseFileCommentController::class, 'destroy'])->name('course-file-comments.destroy');
 
-    Route::get('/stage-folder',                                        [StudentStageFolderController::class, 'index'])->name('stage-folder.index');
-    Route::post('/stage-folder',                                       [StudentStageFolderController::class, 'store'])->name('stage-folder.store');
-    Route::delete('/stage-folder/{stageFolderRequest}',                [StudentStageFolderController::class, 'cancel'])->name('stage-folder.cancel');
-    Route::get('/stage-folder/{stageFolderRequest}/download',          [StudentStageFolderController::class, 'download'])->name('stage-folder.download');
+    Route::get('/stage-folder',                                           [StudentStageFolderController::class, 'index'])->name('stage-folder.index');
+    Route::post('/stage-folder',                                          [StudentStageFolderController::class, 'store'])->name('stage-folder.store');
+    Route::patch('/stage-folder/{stageFolderRequest}/company',            [StudentStageFolderController::class, 'updateCompany'])->name('stage-folder.update-company');
+    Route::delete('/stage-folder/{stageFolderRequest}',                   [StudentStageFolderController::class, 'cancel'])->name('stage-folder.cancel');
+    Route::get('/stage-folder/{stageFolderRequest}/download',             [StudentStageFolderController::class, 'download'])->name('stage-folder.download');
 });
 
 // ── Profile & notifications ────────────────────────────────────────────────

@@ -20,33 +20,49 @@ class StudentController extends Controller
 {
     public function dashboard(Request $request): Response
     {
-        $student   = $request->user();
-        $moduleIds = $student->enrolledModules()->pluck('modules.id');
+        $student = $request->user()->load(['specialization', 'semesterObj']);
 
-        $grades  = Grade::where('student_id', $student->id)->whereIn('module_id', $moduleIds)->get();
-        $average = $grades->isNotEmpty() ? round($grades->avg('grade'), 2) : null;
+        $modules = $student->enrolledModules()
+            ->with('teacher:id,name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($m) => [
+                'id'          => $m->id,
+                'name'        => $m->name,
+                'code'        => $m->code,
+                'coefficient' => $m->coefficient,
+                'teacher'     => $m->teacher?->name ?? '—',
+                'published'   => $m->is_published,
+            ]);
 
-        $today = now()->startOfDay();
+        $moduleIds  = $modules->pluck('id');
+        $today      = now()->startOfDay();
 
-        // TP course files with a future deadline that this student hasn't submitted yet
         $pendingTps = CourseFile::whereIn('module_id', $moduleIds)
             ->where('type', 'tp')
             ->where('due_date', '>=', $today)
             ->whereDoesntHave('submissions', fn ($q) => $q->where('student_id', $student->id))
             ->orderBy('due_date')
-            ->get(['id', 'title', 'due_date']);
+            ->with('module:id,name')
+            ->get(['id', 'title', 'due_date', 'module_id'])
+            ->map(fn ($tp) => [
+                'id'          => $tp->id,
+                'title'       => $tp->title,
+                'due_date'    => $tp->due_date->toDateString(),
+                'module_name' => $tp->module?->name,
+            ]);
 
-        $nextTp = $pendingTps->first();
-
-        $stats = [
-            'modules'        => $moduleIds->count(),
-            'average'        => $average,
-            'pending_tps'    => $pendingTps->count(),
-            'next_tp_title'  => $nextTp?->title,
-            'next_tp_due'    => $nextTp?->due_date->toDateString(),
-        ];
-
-        return Inertia::render('Student/Dashboard', ['stats' => $stats]);
+        return Inertia::render('Student/Dashboard', [
+            'profile' => [
+                'name'           => $student->name,
+                'email'          => $student->email,
+                'specialization' => $student->specialization?->name,
+                'filiere_code'   => $student->specialization?->code,
+                'semester'       => $student->semesterObj?->name,
+            ],
+            'modules'     => $modules,
+            'pending_tps' => $pendingTps,
+        ]);
     }
 
     public function results(Request $request): Response

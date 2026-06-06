@@ -55,12 +55,10 @@ class StageFolderController extends Controller
         }
 
         $validated = $request->validate([
-            'phone'           => ['required', 'string', 'max:20'],
-            'company_name'    => ['nullable', 'string', 'max:255'],
-            'company_address' => ['nullable', 'string', 'max:255'],
-            'internship_start'=> ['nullable', 'date'],
-            'duration_weeks'  => ['nullable', 'integer', 'min:1', 'max:52'],
-            'notes'           => ['nullable', 'string', 'max:1000'],
+            'phone'            => ['required', 'string', 'max:20'],
+            'internship_start' => ['nullable', 'date'],
+            'duration_weeks'   => ['nullable', 'integer', 'min:1', 'max:52'],
+            'notes'            => ['nullable', 'string', 'max:1000'],
         ]);
 
         $folderRequest = StageFolderRequest::create([
@@ -74,6 +72,20 @@ class StageFolderController extends Controller
         Notification::send($admins, new StageFolderRequested($folderRequest));
 
         return back()->with('success', 'Votre demande a été envoyée. L\'admin vous contactera prochainement.');
+    }
+
+    public function updateCompany(Request $request, StageFolderRequest $stageFolderRequest)
+    {
+        abort_unless($stageFolderRequest->student_id === $request->user()->id, 403);
+
+        $validated = $request->validate([
+            'company_name'    => ['nullable', 'string', 'max:255'],
+            'company_address' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $stageFolderRequest->update($validated);
+
+        return back()->with('success', 'Informations de l\'entreprise mises à jour.');
     }
 
     public function cancel(Request $request, StageFolderRequest $stageFolderRequest)
