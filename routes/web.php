@@ -152,6 +152,7 @@ Route::middleware(['auth', 'verified', 'teacher'])->prefix('teacher')->name('tea
 Route::middleware(['auth', 'verified', 'student'])->prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard',   [StudentController::class, 'dashboard'])->name('dashboard');
     Route::get('/results',     [StudentController::class, 'results'])->name('results');
+    Route::get('/transcript',  [StudentController::class, 'transcript'])->name('transcript');
     Route::get('/attendance',  [StudentAttendanceController::class, 'index'])->name('attendance.index');
     Route::get('/schedule',  [StudentController::class, 'schedule'])->name('schedule');
     Route::get('/tps',       [StudentController::class, 'tps'])->name('tps');

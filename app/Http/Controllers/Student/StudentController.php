@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Student;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
+use App\Models\Attendance;
 use App\Models\CourseFile;
 use App\Models\ExamTimetable;
 use App\Models\Grade;
@@ -250,5 +252,79 @@ class StudentController extends Controller
             });
 
         return Inertia::render('Student/TPs', ['tps' => $tps]);
+    }
+
+    public function transcript(Request $request): Response
+    {
+        $student = $request->user()->load(['specialization', 'semesterObj']);
+        $yearId  = AcademicYear::currentId();
+        $year    = AcademicYear::current();
+
+        // All modules for this student's spec + semester
+        $modules = collect();
+        if ($student->specialization_id && $student->semester_id) {
+            $modules = Module::where('specialization_id', $student->specialization_id)
+                ->where('semester_id', $student->semester_id)
+                ->with('teacher:id,name')
+                ->orderBy('name')
+                ->get();
+        }
+        if ($modules->isEmpty()) {
+            $modules = $student->enrolledModules()->with('teacher:id,name')->orderBy('name')->get();
+        }
+
+        $myGrades = Grade::where('student_id', $student->id)
+            ->where('academic_year_id', $yearId)
+            ->whereIn('module_id', $modules->pluck('id'))
+            ->get()->keyBy('module_id');
+
+        $rows = $modules->map(fn ($m) => [
+            'id'          => $m->id,
+            'name'        => $m->name,
+            'code'        => $m->code,
+            'coefficient' => $m->coefficient,
+            'teacher'     => $m->teacher?->name ?? '—',
+            'published'   => $m->is_published,
+            'grade'       => ($m->is_published && $myGrades->has($m->id))
+                             ? (float) $myGrades[$m->id]->grade : null,
+        ])->values();
+
+        $graded      = $rows->filter(fn ($r) => $r['grade'] !== null);
+        $totalCoef   = $graded->sum('coefficient');
+        $average     = $totalCoef > 0
+            ? round($graded->sum(fn ($r) => $r['grade'] * $r['coefficient']) / $totalCoef, 2)
+            : null;
+
+        // Attendance summary across all modules
+        $attStats = Attendance::where('student_id', $student->id)
+            ->where('academic_year_id', $yearId)
+            ->selectRaw('status, count(*) as cnt')
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
+
+        $attTotal   = $attStats->sum();
+        $attPresent = ($attStats['present'] ?? 0) + ($attStats['late'] ?? 0);
+        $attRate    = $attTotal > 0 ? round($attPresent / $attTotal * 100) : null;
+
+        return Inertia::render('Student/Transcript', [
+            'student'    => [
+                'name'           => $student->name,
+                'email'          => $student->email,
+                'specialization' => $student->specialization?->name,
+                'filiere_code'   => $student->specialization?->code,
+                'semester'       => $student->semesterObj?->name,
+            ],
+            'year'       => $year->name,
+            'modules'    => $rows,
+            'average'    => $average,
+            'attendance' => [
+                'total'   => $attTotal,
+                'present' => $attStats['present'] ?? 0,
+                'absent'  => $attStats['absent']  ?? 0,
+                'late'    => $attStats['late']     ?? 0,
+                'excused' => $attStats['excused']  ?? 0,
+                'rate'    => $attRate,
+            ],
+        ]);
     }
 }
