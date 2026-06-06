@@ -7,7 +7,7 @@ import { useState } from 'react';
 function SemBadge({ name, t }) {
     if (name === 'graduate') {
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-700 min-w-fit">
                 🎓 {t('graduating_label').replace(' ✓', '')}
             </span>
         );
