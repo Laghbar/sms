@@ -1,5 +1,6 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head, Link } from '@inertiajs/react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function formatSize(bytes) {
     if (bytes < 1024)        return bytes + ' B';
@@ -19,6 +20,7 @@ function formatDate(dateStr) {
 }
 
 export default function CourseFileSubmissions({ courseFile, submissions }) {
+    const { t } = useLanguage();
     const isPast = courseFile.due_date
         ? new Date(courseFile.due_date) < new Date(new Date().setHours(0, 0, 0, 0))
         : false;
@@ -31,17 +33,17 @@ export default function CourseFileSubmissions({ courseFile, submissions }) {
                         href={route('teacher.course-files.index')}
                         className="text-sm text-gray-500 hover:text-gray-700"
                     >
-                        ← Course Files
+                        ← {t('nav_course_files_teacher')}
                     </Link>
                     <div>
                         <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                            Submissions — {courseFile.title}
+                            {t('submissions_col')} — {courseFile.title}
                         </h2>
                         <p className="text-sm text-gray-500">
                             {courseFile.module.name} ({courseFile.module.code})
                             {courseFile.due_date && (
                                 <span className={`ml-2 font-medium ${isPast ? 'text-red-500' : 'text-green-600'}`}>
-                                    · Deadline: {formatDate(courseFile.due_date)} ({isPast ? 'Closed' : 'Open'})
+                                    · {t('deadline_label')}: {formatDate(courseFile.due_date)} ({isPast ? t('closed_label') : t('open_label')})
                                 </span>
                             )}
                         </p>
@@ -56,21 +58,21 @@ export default function CourseFileSubmissions({ courseFile, submissions }) {
 
                     {submissions.length === 0 ? (
                         <div className="rounded-xl bg-white p-10 text-center shadow-sm">
-                            <p className="text-sm text-gray-400">No submissions yet.</p>
+                            <p className="text-sm text-gray-400">{t('no_submissions_yet')}</p>
                         </div>
                     ) : (
                         <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                             <div className="border-b border-gray-200 bg-gray-50 px-6 py-3">
                                 <span className="text-sm font-semibold text-gray-600">
-                                    {submissions.length} submission{submissions.length !== 1 ? 's' : ''}
+                                    {submissions.length} {t('submissions_col')}
                                 </span>
                             </div>
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Student</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">File</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Submitted</th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('students_label')}</th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('file_field_label')}</th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('submitted_on_col')}</th>
                                         <th className="px-6 py-3" />
                                     </tr>
                                 </thead>
@@ -93,7 +95,7 @@ export default function CourseFileSubmissions({ courseFile, submissions }) {
                                                     href={s.download_url}
                                                     className="rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
                                                 >
-                                                    Download
+                                                    {t('download')}
                                                 </a>
                                             </td>
                                         </tr>

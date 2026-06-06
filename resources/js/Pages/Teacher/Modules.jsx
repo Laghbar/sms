@@ -1,5 +1,6 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head } from '@inertiajs/react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const TYPE_COLORS = {
     cours: 'bg-indigo-100 text-indigo-700',
@@ -10,15 +11,17 @@ const TYPE_COLORS = {
 const DAY_ABBR = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri', saturday:'Sat' };
 
 export default function Modules({ modules }) {
+    const { t } = useLanguage();
+
     return (
-        <TeacherLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">My Modules</h2>}>
-            <Head title="My Modules" />
+        <TeacherLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('nav_my_modules')}</h2>}>
+            <Head title={t('nav_my_modules')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
                     {modules.length === 0 && (
                         <div className="rounded-xl bg-white p-10 text-center text-sm text-gray-400 shadow-sm">
-                            No modules assigned yet.
+                            {t('no_modules_assigned')}
                         </div>
                     )}
 
@@ -41,14 +44,14 @@ export default function Modules({ modules }) {
 
                                             {/* Meta */}
                                             <div className="flex gap-4 border-b border-gray-100 px-5 py-3 text-sm text-gray-600">
-                                                <span>⚖️ Coefficient <strong>{mod.coefficient}</strong></span>
-                                                <span>🎓 <strong>{mod.students_count}</strong> student{mod.students_count !== 1 ? 's' : ''}</span>
+                                                <span>⚖️ {t('coeff_label')} <strong>{mod.coefficient}</strong></span>
+                                                <span>🎓 <strong>{mod.students_count}</strong> {t('students_label')}</span>
                                             </div>
 
                                             {/* Sessions */}
                                             {mod.schedules?.length > 0 && (
                                                 <div className="px-5 py-3 space-y-1">
-                                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Sessions</p>
+                                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">{t('sessions_label')}</p>
                                                     {mod.schedules.map(s => (
                                                         <div key={s.id} className="flex items-center gap-2 text-sm">
                                                             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${TYPE_COLORS[s.type]}`}>{s.type.toUpperCase()}</span>

@@ -1,6 +1,7 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useCallback, useState } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function formatSize(bytes) {
     if (bytes < 1024)        return bytes + ' B';
@@ -29,7 +30,7 @@ function Modal({ open, onClose, title, children }) {
     );
 }
 
-function UploadModal({ modules, onClose }) {
+function UploadModal({ modules, onClose, t }) {
     const { data, setData, post, errors, processing, reset } = useForm({
         module_id:   '',
         type:        '',
@@ -54,9 +55,9 @@ function UploadModal({ modules, onClose }) {
         <form onSubmit={submit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Module</label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">{t('col_module')}</label>
                     <select value={data.module_id} onChange={(e) => setData('module_id', e.target.value)} className={field}>
-                        <option value="">Select…</option>
+                        <option value="">{t('select_ph')}</option>
                         {modules.map((m) => (
                             <option key={m.id} value={m.id}>{m.name} ({m.code})</option>
                         ))}
@@ -65,9 +66,9 @@ function UploadModal({ modules, onClose }) {
                 </div>
 
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Type</label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">{t('type_label')}</label>
                     <select value={data.type} onChange={(e) => setData('type', e.target.value)} className={field}>
-                        <option value="">Select…</option>
+                        <option value="">{t('select_ph')}</option>
                         <option value="cours">Cours</option>
                         <option value="td">TD</option>
                         <option value="tp">TP</option>
@@ -77,7 +78,7 @@ function UploadModal({ modules, onClose }) {
             </div>
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Title</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('title_label')}</label>
                 <input
                     type="text"
                     value={data.title}
@@ -90,7 +91,7 @@ function UploadModal({ modules, onClose }) {
 
             <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Description <span className="font-normal text-gray-400">(optional)</span>
+                    {t('description_label')} <span className="font-normal text-gray-400">(optional)</span>
                 </label>
                 <textarea
                     value={data.description}
@@ -106,8 +107,8 @@ function UploadModal({ modules, onClose }) {
             {data.type === 'tp' && (
                 <div>
                     <label className="mb-1 block text-sm font-medium text-gray-700">
-                        Submission Deadline
-                        <span className="ml-1 font-normal text-gray-400">(students cannot submit after this date)</span>
+                        {t('submission_deadline')}
+                        <span className="ml-1 font-normal text-gray-400">{t('deadline_students_hint')}</span>
                     </label>
                     <input
                         type="date"
@@ -121,23 +122,23 @@ function UploadModal({ modules, onClose }) {
             )}
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">File</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('file_field_label')}</label>
                 <input
                     type="file"
                     accept=".pdf,.doc,.docx,.ppt,.pptx"
                     onChange={(e) => setData('file', e.target.files[0])}
                     className="block w-full text-sm text-gray-500 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
                 />
-                <p className="mt-1 text-xs text-gray-400">PDF, DOC, DOCX, PPT, PPTX — max 50 MB</p>
+                <p className="mt-1 text-xs text-gray-400">{t('file_formats_course')}</p>
                 {errors.file && <p className={errCls}>{errors.file}</p>}
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                    Cancel
+                    {t('cancel')}
                 </button>
                 <button type="submit" disabled={processing} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
-                    {processing ? 'Uploading…' : 'Upload File'}
+                    {processing ? t('uploading_label') : t('upload_file_btn')}
                 </button>
             </div>
         </form>
@@ -145,6 +146,7 @@ function UploadModal({ modules, onClose }) {
 }
 
 export default function CourseFiles({ files, modules, filters }) {
+    const { t } = useLanguage();
     const { flash } = usePage().props;
     const [uploading, setUploading]   = useState(false);
     const [deletingId, setDeletingId] = useState(null);
@@ -178,7 +180,7 @@ export default function CourseFiles({ files, modules, filters }) {
         <TeacherLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">Course Files</h2>
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800">{t('nav_course_files_teacher')}</h2>
                     <button
                         onClick={() => setUploading(true)}
                         className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
@@ -186,27 +188,27 @@ export default function CourseFiles({ files, modules, filters }) {
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
-                        Upload File
+                        {t('upload')}
                     </button>
                 </div>
             }
         >
-            <Head title="Course Files" />
+            <Head title={t('nav_course_files_teacher')} />
 
-            <Modal open={uploading} onClose={() => setUploading(false)} title="Upload Course File">
-                <UploadModal modules={modules} onClose={() => setUploading(false)} />
+            <Modal open={uploading} onClose={() => setUploading(false)} title={t('upload_course_file')}>
+                <UploadModal modules={modules} onClose={() => setUploading(false)} t={t} />
             </Modal>
 
-            <Modal open={!!deletingId} onClose={() => setDeletingId(null)} title="Delete File">
+            <Modal open={!!deletingId} onClose={() => setDeletingId(null)} title={t('delete_file_title')}>
                 <p className="mb-6 text-sm text-gray-600">
-                    This will permanently delete the file and all student submissions. Are you sure?
+                    {t('delete_file_confirm')}
                 </p>
                 <div className="flex justify-end gap-3">
                     <button onClick={() => setDeletingId(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                        Cancel
+                        {t('cancel')}
                     </button>
                     <button onClick={() => confirmDelete(deletingId)} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
-                        Delete
+                        {t('delete')}
                     </button>
                 </div>
             </Modal>
@@ -223,18 +225,18 @@ export default function CourseFiles({ files, modules, filters }) {
                     {/* Filters */}
                     <div className="flex flex-wrap items-center gap-3">
                         <select value={moduleFilter} onChange={handleModuleFilter} className="rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
-                            <option value="">All modules</option>
+                            <option value="">{t('all_modules_filter')}</option>
                             {modules.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}
                         </select>
                         <select value={typeFilter} onChange={handleTypeFilter} className="rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
-                            <option value="">All types</option>
+                            <option value="">{t('all_types_filter')}</option>
                             <option value="cours">Cours</option>
                             <option value="td">TD</option>
                             <option value="tp">TP</option>
                         </select>
                         {(moduleFilter || typeFilter) && (
                             <button onClick={() => { setModuleFilter(''); setTypeFilter(''); applyFilters('', ''); }} className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50">
-                                Clear
+                                {t('clear')}
                             </button>
                         )}
                         <span className="ms-auto text-sm text-gray-400">{files.length} file{files.length !== 1 ? 's' : ''}</span>
@@ -242,9 +244,9 @@ export default function CourseFiles({ files, modules, filters }) {
 
                     {files.length === 0 && (
                         <div className="rounded-xl bg-white p-10 text-center shadow-sm">
-                            <p className="text-sm text-gray-400">No files uploaded yet.</p>
+                            <p className="text-sm text-gray-400">{t('no_files_yet')}</p>
                             <button onClick={() => setUploading(true)} className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                                Upload your first file
+                                {t('upload_first_file')}
                             </button>
                         </div>
                     )}
@@ -262,12 +264,12 @@ export default function CourseFiles({ files, modules, filters }) {
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Title</th>
-                                                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Module</th>
-                                                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">File</th>
-                                                {isTp && <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Deadline</th>}
-                                                {isTp && <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Submissions</th>}
-                                                {!isTp && <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Uploaded</th>}
+                                                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('title_label')}</th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('col_module')}</th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('file_field_label')}</th>
+                                                {isTp && <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('deadline_label')}</th>}
+                                                {isTp && <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('submissions_col')}</th>}
+                                                {!isTp && <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('uploaded_col')}</th>}
                                                 <th className="px-6 py-3" />
                                             </tr>
                                         </thead>
@@ -294,7 +296,7 @@ export default function CourseFiles({ files, modules, filters }) {
                                                                     <>
                                                                         <p className="text-sm text-gray-700">{formatDate(f.due_date)}</p>
                                                                         <p className={`text-xs font-medium ${past ? 'text-red-500' : 'text-green-600'}`}>
-                                                                            {past ? 'Closed' : 'Open'}
+                                                                            {past ? t('closed_label') : t('open_label')}
                                                                         </p>
                                                                     </>
                                                                 ) : (
@@ -308,7 +310,7 @@ export default function CourseFiles({ files, modules, filters }) {
                                                                     href={f.submissions_url}
                                                                     className="text-sm font-medium text-indigo-600 hover:underline"
                                                                 >
-                                                                    {f.submissions_count} submitted
+                                                                    {f.submissions_count} {t('submitted_col')}
                                                                 </a>
                                                             </td>
                                                         )}
@@ -328,10 +330,10 @@ export default function CourseFiles({ files, modules, filters }) {
                                                                     {f.comments_count}
                                                                 </Link>
                                                                 <a href={f.download_url} className="rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50">
-                                                                    Download
+                                                                    {t('download')}
                                                                 </a>
                                                                 <button onClick={() => setDeletingId(f.id)} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50">
-                                                                    Delete
+                                                                    {t('delete')}
                                                                 </button>
                                                             </div>
                                                         </td>

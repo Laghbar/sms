@@ -1,5 +1,6 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { useState } from 'react';
 
 /* ── Shared field style ──────────────────────────────────────────────── */
@@ -14,7 +15,7 @@ const TYPE_COLORS = {
 const DAY_ABBR = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri', saturday:'Sat' };
 
 /* ── Module form (create / edit) ─────────────────────────────────────── */
-function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillSemId, onClose }) {
+function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillSemId, onClose, t }) {
     const isEdit = !!module;
 
     const { data, setData, post, put, errors, processing } = useForm({
@@ -44,21 +45,21 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
     return (
         <form onSubmit={submit} className="space-y-4">
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Module Name</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('col_module')} {t('name_col')}</label>
                 <input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)}
                     placeholder="e.g. Algorithmique Avancée" className={F} autoFocus />
                 {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
             </div>
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Code</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('code_label')}</label>
                 <input type="text" value={data.code} onChange={(e) => setData('code', e.target.value.toUpperCase())}
                     placeholder="e.g. GI-ALGO2-S3" className={F + ' font-mono'} />
                 {errors.code && <p className="mt-1 text-xs text-red-500">{errors.code}</p>}
             </div>
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Specialization</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('specialization')}</label>
                 <select value={data.specialization_id} onChange={(e) => handleSpecChange(e.target.value)} className={F}>
                     <option value="">— Select specialization —</option>
                     {specializations.map((s) => (
@@ -69,7 +70,7 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
             </div>
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Semester</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('semester')}</label>
                 <select value={data.semester_id} onChange={(e) => setData('semester_id', e.target.value)}
                     className={F} disabled={!data.specialization_id}>
                     <option value="">— Select semester —</option>
@@ -81,7 +82,7 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
             </div>
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Coefficient</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('coefficient')}</label>
                 <select value={data.coefficient} onChange={(e) => setData('coefficient', Number(e.target.value))} className={F}>
                     {[1,2,3,4,5,6].map((c) => (
                         <option key={c} value={c}>{c}</option>
@@ -92,10 +93,10 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
 
             <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Teacher <span className="font-normal text-gray-400">(optional)</span>
+                    {t('teacher')} <span className="font-normal text-gray-400">{t('optional')}</span>
                 </label>
                 <select value={data.teacher_id} onChange={(e) => setData('teacher_id', e.target.value)} className={F}>
-                    <option value="">— No teacher assigned —</option>
+                    <option value="">— {t('unassigned')} —</option>
                     {teachers.map((t) => (
                         <option key={t.id} value={t.id}>{t.name}</option>
                     ))}
@@ -105,7 +106,7 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
 
             <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Description <span className="font-normal text-gray-400">(optional)</span>
+                    {t('description_label')} <span className="font-normal text-gray-400">{t('optional')}</span>
                 </label>
                 <textarea value={data.description} onChange={(e) => setData('description', e.target.value)}
                     className={F} rows={3} placeholder="Brief description…" />
@@ -115,11 +116,11 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
             <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={onClose}
                     className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                    Cancel
+                    {t('cancel')}
                 </button>
                 <button type="submit" disabled={processing}
                     className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
-                    {processing ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Module'}
+                    {processing ? t('saving_label') : isEdit ? t('save') : `${t('new')} ${t('col_module')}`}
                 </button>
             </div>
         </form>
@@ -127,7 +128,7 @@ function ModuleForm({ module, teachers, specializations, prefillSpecId, prefillS
 }
 
 /* ── Sessions modal content ──────────────────────────────────────────── */
-function SessionsPanel({ module, onClose }) {
+function SessionsPanel({ module, onClose, t }) {
     const { data, setData, post, reset, errors, processing } = useForm({
         day:         'monday',
         type:        'cours',
@@ -181,21 +182,21 @@ function SessionsPanel({ module, onClose }) {
                                 disabled={deletingId === s.id}
                                 className="ml-3 shrink-0 text-xs text-red-400 hover:text-red-600 disabled:opacity-40"
                             >
-                                {deletingId === s.id ? '…' : 'Remove'}
+                                {deletingId === s.id ? '…' : t('remove')}
                             </button>
                         </div>
                     ))}
                 </div>
             ) : (
-                <p className="mb-5 text-sm text-gray-400 italic">No sessions assigned yet.</p>
+                <p className="mb-5 text-sm text-gray-400 italic">{t('no_sessions_yet')}</p>
             )}
 
             {/* Add session form */}
             <form onSubmit={addSession} className="space-y-3 border-t border-gray-100 pt-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Add Session</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t('add_session')}</p>
                 <div className="grid grid-cols-2 gap-3">
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">Day</label>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">{t('day_label')}</label>
                         <select value={data.day} onChange={e => setData('day', e.target.value)} className={F}>
                             {DAY_OPTS.map(d => (
                                 <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
@@ -203,7 +204,7 @@ function SessionsPanel({ module, onClose }) {
                         </select>
                     </div>
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">Type</label>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">{t('type_label')}</label>
                         <select value={data.type} onChange={e => setData('type', e.target.value)} className={F}>
                             <option value="cours">Cours</option>
                             <option value="td">TD</option>
@@ -211,38 +212,38 @@ function SessionsPanel({ module, onClose }) {
                         </select>
                     </div>
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">Start time</label>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">{t('start_time_label')}</label>
                         <input type="time" value={data.start_time} onChange={e => setData('start_time', e.target.value)} className={F} />
                         {errors.start_time && <p className="mt-0.5 text-xs text-red-500">{errors.start_time}</p>}
                     </div>
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">End time</label>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">{t('end_time_label')}</label>
                         <input type="time" value={data.end_time} onChange={e => setData('end_time', e.target.value)} className={F} />
                         {errors.end_time && <p className="mt-0.5 text-xs text-red-500">{errors.end_time}</p>}
                     </div>
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">Room</label>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">{t('room_label')}</label>
                         <input type="text" value={data.room} onChange={e => setData('room', e.target.value)}
                             placeholder="e.g. B-205" className={F} />
                         {errors.room && <p className="mt-0.5 text-xs text-red-500">{errors.room}</p>}
                     </div>
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">Week</label>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">{t('week_label')}</label>
                         <select value={data.week_parity} onChange={e => setData('week_parity', e.target.value)} className={F}>
-                            <option value="all">Every week</option>
-                            <option value="odd">Odd weeks</option>
-                            <option value="even">Even weeks</option>
+                            <option value="all">{t('every_week')}</option>
+                            <option value="odd">{t('odd_weeks')}</option>
+                            <option value="even">{t('even_weeks')}</option>
                         </select>
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 pt-1">
                     <button type="button" onClick={onClose}
                         className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                        Close
+                        {t('close')}
                     </button>
                     <button type="submit" disabled={processing}
                         className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
-                        {processing ? 'Adding…' : 'Add Session'}
+                        {processing ? t('loading') : t('add')}
                     </button>
                 </div>
             </form>
@@ -269,7 +270,7 @@ function Modal({ open, onClose, title, children }) {
 }
 
 /* ── Delete confirm ──────────────────────────────────────────────────── */
-function DeleteConfirm({ modId, onCancel }) {
+function DeleteConfirm({ modId, onCancel, t }) {
     const [busy, setBusy] = useState(false);
     function confirm() {
         setBusy(true);
@@ -280,12 +281,12 @@ function DeleteConfirm({ modId, onCancel }) {
     }
     return (
         <div className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5">
-            <span className="text-[11px] text-red-700">Delete?</span>
+            <span className="text-[11px] text-red-700">{t('delete')}?</span>
             <button onClick={confirm} disabled={busy}
                 className="rounded bg-red-600 px-1.5 py-0.5 text-[11px] font-semibold text-white hover:bg-red-700 disabled:opacity-50">
-                {busy ? '…' : 'Yes'}
+                {busy ? '…' : t('yes')}
             </button>
-            <button onClick={onCancel} className="text-[11px] text-gray-400 hover:text-gray-600">No</button>
+            <button onClick={onCancel} className="text-[11px] text-gray-400 hover:text-gray-600">{t('no')}</button>
         </div>
     );
 }
@@ -293,6 +294,7 @@ function DeleteConfirm({ modId, onCancel }) {
 /* ── Page ────────────────────────────────────────────────────────────── */
 export default function Modules({ modules, teachers, specializations, filters }) {
     const { flash } = usePage().props;
+    const { t } = useLanguage();
 
     const [specId, setSpecId]     = useState(filters.specialization_id ?? '');
     const [semId,  setSemId]      = useState(filters.semester_id       ?? '');
@@ -329,14 +331,14 @@ export default function Modules({ modules, teachers, specializations, filters })
     return (
         <AdminLayout header={
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">Modules</h2>
+                <h2 className="text-xl font-semibold leading-tight text-gray-800">{t('nav_modules')}</h2>
                 {step === 'show' && modules != null && (
                     <button onClick={() => setCreating(true)}
                         className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
-                        New Module
+                        {t('new')} {t('col_module')}
                     </button>
                 )}
             </div>
@@ -344,7 +346,7 @@ export default function Modules({ modules, teachers, specializations, filters })
             <Head title="Modules" />
 
             {/* Create modal */}
-            <Modal open={creating} onClose={() => setCreating(false)} title="Create Module">
+            <Modal open={creating} onClose={() => setCreating(false)} title={`${t('new')} ${t('col_module')}`}>
                 <ModuleForm
                     module={null}
                     teachers={teachers}
@@ -352,17 +354,19 @@ export default function Modules({ modules, teachers, specializations, filters })
                     prefillSpecId={specId}
                     prefillSemId={semId}
                     onClose={() => setCreating(false)}
+                    t={t}
                 />
             </Modal>
 
             {/* Edit modal */}
-            <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit Module">
+            <Modal open={!!editing} onClose={() => setEditing(null)} title={`${t('edit')} ${t('col_module')}`}>
                 {editing && (
                     <ModuleForm
                         module={editing}
                         teachers={teachers}
                         specializations={specializations}
                         onClose={() => setEditing(null)}
+                        t={t}
                     />
                 )}
             </Modal>
@@ -371,12 +375,13 @@ export default function Modules({ modules, teachers, specializations, filters })
             <Modal
                 open={!!schedulingModule}
                 onClose={() => setSchedulingModuleId(null)}
-                title={schedulingModule ? `Sessions — ${schedulingModule.name}` : ''}
+                title={schedulingModule ? `${t('sessions_label')} — ${schedulingModule.name}` : ''}
             >
                 {schedulingModule && (
                     <SessionsPanel
                         module={schedulingModule}
                         onClose={() => setSchedulingModuleId(null)}
+                        t={t}
                     />
                 )}
             </Modal>
@@ -397,16 +402,16 @@ export default function Modules({ modules, teachers, specializations, filters })
                     {/* ── Cascading selectors ── */}
                     <div className="rounded-xl bg-white p-6 shadow-sm">
                         <p className="mb-4 text-sm font-medium text-gray-500 uppercase tracking-wide">
-                            Select a specialization and semester to view modules
+                            {t('modules_selector_hint')}
                         </p>
                         <div className="flex flex-wrap gap-4">
                             <div className="flex-1 min-w-48">
                                 <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">1</span>
-                                    Specialization
+                                    {t('specialization')}
                                 </label>
                                 <select value={specId} onChange={(e) => handleSpecChange(e.target.value)} className={F}>
-                                    <option value="">— Choose specialization —</option>
+                                    <option value="">— {t('specialization')} —</option>
                                     {specializations.map((s) => (
                                         <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
                                     ))}
@@ -416,11 +421,11 @@ export default function Modules({ modules, teachers, specializations, filters })
                             <div className="flex-1 min-w-48">
                                 <label className={`mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide ${!specId ? 'text-gray-300' : 'text-gray-400'}`}>
                                     <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white ${!specId ? 'bg-gray-300' : 'bg-indigo-600'}`}>2</span>
-                                    Semester
+                                    {t('semester')}
                                 </label>
                                 <select value={semId} onChange={(e) => handleSemChange(e.target.value)}
                                     className={F} disabled={!specId}>
-                                    <option value="">— Choose semester —</option>
+                                    <option value="">— {t('semester')} —</option>
                                     {semesterList.map((s) => (
                                         <option key={s.id} value={s.id}>{s.name}</option>
                                     ))}
@@ -430,12 +435,12 @@ export default function Modules({ modules, teachers, specializations, filters })
                             <div className="flex-1 min-w-48 flex flex-col justify-end">
                                 <label className={`mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide ${step !== 'show' ? 'text-gray-300' : 'text-gray-400'}`}>
                                     <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white ${step !== 'show' ? 'bg-gray-300' : 'bg-emerald-500'}`}>3</span>
-                                    Modules
+                                    {t('nav_modules')}
                                 </label>
                                 <div className={`rounded-lg border px-3 py-2 text-sm ${step !== 'show' ? 'border-gray-200 text-gray-300' : 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold'}`}>
                                     {step !== 'show'
-                                        ? 'Waiting for selection…'
-                                        : `${modules?.length ?? 0} module${(modules?.length ?? 0) !== 1 ? 's' : ''} found`}
+                                        ? t('waiting_selection')
+                                        : `${modules?.length ?? 0} ${t('nav_modules')}`}
                                 </div>
                             </div>
                         </div>
@@ -449,8 +454,8 @@ export default function Modules({ modules, teachers, specializations, filters })
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25" />
                                 </svg>
                             </div>
-                            <p className="text-gray-500 font-medium">Select a specialization to get started</p>
-                            <p className="mt-1 text-sm text-gray-400">Choose from the dropdown above</p>
+                            <p className="text-gray-500 font-medium">{t('select_spec_start')}</p>
+                            <p className="mt-1 text-sm text-gray-400">{t('choose_dropdown')}</p>
                         </div>
                     )}
 
@@ -473,23 +478,23 @@ export default function Modules({ modules, teachers, specializations, filters })
                         <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                             {modules.length === 0 ? (
                                 <div className="py-16 text-center">
-                                    <p className="text-gray-400 text-sm">No modules in this semester yet.</p>
+                                    <p className="text-gray-400 text-sm">{t('no_data')}</p>
                                     <button onClick={() => setCreating(true)}
                                         className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                                        Create the first module
+                                        {t('create_first_module')}
                                     </button>
                                 </div>
                             ) : (
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                         <tr>
-                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Module</th>
-                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Code</th>
-                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Teacher</th>
-                                            <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Coeff</th>
-                                            <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Students</th>
-                                            <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Sessions</th>
-                                            <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('col_module')}</th>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('code_label')}</th>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('teacher')}</th>
+                                            <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">{t('coefficient')}</th>
+                                            <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">{t('students_count')}</th>
+                                            <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">{t('sessions_label')}</th>
+                                            <th className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">{t('status')}</th>
                                             <th className="px-5 py-3" />
                                         </tr>
                                     </thead>
@@ -510,7 +515,7 @@ export default function Modules({ modules, teachers, specializations, filters })
                                                 <td className="px-5 py-4">
                                                     {mod.teacher_name
                                                         ? <span className="text-sm text-gray-700">{mod.teacher_name}</span>
-                                                        : <span className="text-xs italic text-red-400">Unassigned</span>
+                                                        : <span className="text-xs italic text-red-400">{t('unassigned')}</span>
                                                     }
                                                 </td>
                                                 <td className="px-5 py-4 text-center">
@@ -530,25 +535,25 @@ export default function Modules({ modules, teachers, specializations, filters })
                                                 </td>
                                                 <td className="px-5 py-4 text-center">
                                                     {mod.is_published
-                                                        ? <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Published</span>
-                                                        : <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-600">Draft</span>
+                                                        ? <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">{t('published_badge')}</span>
+                                                        : <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-600">{t('draft_label')}</span>
                                                     }
                                                 </td>
                                                 <td className="px-5 py-4">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <Link href={route('admin.modules.students', mod.id)}
                                                             className="rounded px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50">
-                                                            Students
+                                                            {t('students_count')}
                                                         </Link>
                                                         <button onClick={() => setEditing(mod)}
                                                             className="rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50">
-                                                            Edit
+                                                            {t('edit')}
                                                         </button>
                                                         {deletingId === mod.id
-                                                            ? <DeleteConfirm modId={mod.id} onCancel={() => setDeletingId(null)} />
+                                                            ? <DeleteConfirm modId={mod.id} onCancel={() => setDeletingId(null)} t={t} />
                                                             : <button onClick={() => setDeletingId(mod.id)}
                                                                 className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50">
-                                                                Delete
+                                                                {t('delete')}
                                                               </button>
                                                         }
                                                     </div>

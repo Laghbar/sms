@@ -1,5 +1,6 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router, useForm } from '@inertiajs/react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { useRef, useState } from 'react';
 
 const STATUS_STYLES = {
@@ -36,7 +37,7 @@ function Modal({ open, onClose, title, children }) {
     );
 }
 
-function EventForm({ event, onClose }) {
+function EventForm({ event, onClose, t }) {
     const isEdit = !!event;
     const fileRef = useRef();
     const [preview, setPreview] = useState(event?.image_url ?? null);
@@ -71,44 +72,44 @@ function EventForm({ event, onClose }) {
     return (
         <form onSubmit={submit} className="space-y-4">
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Title</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('title_label')}</label>
                 <input type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} className={field} placeholder="Event title" />
                 {err('title')}
             </div>
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Description</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('description_label')}</label>
                 <textarea value={data.description} onChange={(e) => setData('description', e.target.value)} rows={4} className={field} placeholder="Describe the event…" />
                 {err('description')}
             </div>
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Location</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('location_label')}</label>
                 <input type="text" value={data.location} onChange={(e) => setData('location', e.target.value)} className={field} placeholder="e.g. Main Auditorium" />
                 {err('location')}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Starts at</label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">{t('starts_at_label')}</label>
                     <input type="datetime-local" value={data.starts_at} onChange={(e) => setData('starts_at', e.target.value)} className={field} />
                     {err('starts_at')}
                 </div>
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Ends at <span className="font-normal text-gray-400">(optional)</span></label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">{t('ends_at_label')} <span className="font-normal text-gray-400">{t('optional')}</span></label>
                     <input type="datetime-local" value={data.ends_at} onChange={(e) => setData('ends_at', e.target.value)} className={field} />
                     {err('ends_at')}
                 </div>
             </div>
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Max participants <span className="font-normal text-gray-400">(optional — leave blank for unlimited)</span></label>
-                <input type="number" min={1} value={data.max_participants} onChange={(e) => setData('max_participants', e.target.value)} className={field} placeholder="Unlimited" />
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('max_participants_label')} <span className="font-normal text-gray-400">{t('optional')}</span></label>
+                <input type="number" min={1} value={data.max_participants} onChange={(e) => setData('max_participants', e.target.value)} className={field} placeholder={t('unlimited_ph')} />
                 {err('max_participants')}
             </div>
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Event image <span className="font-normal text-gray-400">(optional)</span></label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('image_label')} <span className="font-normal text-gray-400">{t('optional')}</span></label>
                 {preview && (
                     <div className="mb-2">
                         <img src={preview} alt="Preview" className="h-32 w-full rounded-lg object-cover" />
@@ -116,16 +117,15 @@ function EventForm({ event, onClose }) {
                 )}
                 <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} className="hidden" />
                 <button type="button" onClick={() => fileRef.current.click()} className="rounded-lg border border-dashed border-gray-300 px-4 py-2 text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600">
-                    {preview ? 'Change image' : 'Upload image'}
+                    {preview ? t('change_image') : t('upload_image')}
                 </button>
                 {err('image')}
             </div>
 
-
             <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+                <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">{t('cancel')}</button>
                 <button type="submit" disabled={processing} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
-                    {processing ? 'Saving…' : isEdit ? 'Update Event' : 'Create Event'}
+                    {processing ? t('saving_label') : isEdit ? t('update_event_btn') : t('create_event_btn')}
                 </button>
             </div>
         </form>
@@ -133,6 +133,7 @@ function EventForm({ event, onClose }) {
 }
 
 export default function Events({ events }) {
+    const { t } = useLanguage();
     const [creating, setCreating]   = useState(false);
     const [editing, setEditing]     = useState(null);
     const [deletingId, setDeletingId] = useState(null);
@@ -149,40 +150,40 @@ export default function Events({ events }) {
     return (
         <AdminLayout header={
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">Events</h2>
+                <h2 className="text-xl font-semibold leading-tight text-gray-800">{t('nav_planning_events')}</h2>
                 <button onClick={() => setCreating(true)} className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                    New Event
+                    {t('new_event_btn')}
                 </button>
             </div>
         }>
-            <Head title="Events" />
+            <Head title={t('nav_planning_events')} />
 
-            <Modal open={creating} onClose={() => setCreating(false)} title="Create Event">
-                <EventForm event={null} onClose={() => setCreating(false)} />
+            <Modal open={creating} onClose={() => setCreating(false)} title={t('create_event')}>
+                <EventForm event={null} onClose={() => setCreating(false)} t={t} />
             </Modal>
-            <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit Event">
-                {editing && <EventForm event={editing} onClose={() => setEditing(null)} />}
+            <Modal open={!!editing} onClose={() => setEditing(null)} title={t('edit_event_title')}>
+                {editing && <EventForm event={editing} onClose={() => setEditing(null)} t={t} />}
             </Modal>
-            <Modal open={!!deletingId} onClose={() => setDeletingId(null)} title="Delete Event">
-                <p className="mb-6 text-sm text-gray-600">This will permanently delete the event and all registrations.</p>
+            <Modal open={!!deletingId} onClose={() => setDeletingId(null)} title={t('delete_event_title')}>
+                <p className="mb-6 text-sm text-gray-600">{t('delete_event_confirm')}</p>
                 <div className="flex justify-end gap-3">
-                    <button onClick={() => setDeletingId(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-                    <button onClick={() => confirmDelete(deletingId)} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Delete</button>
+                    <button onClick={() => setDeletingId(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">{t('cancel')}</button>
+                    <button onClick={() => confirmDelete(deletingId)} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">{t('delete')}</button>
                 </div>
             </Modal>
-            <Modal open={!!notifyingId} onClose={() => setNotifyingId(null)} title="Notify Students">
-                <p className="mb-6 text-sm text-gray-600">Send an email notification about this event to all students?</p>
+            <Modal open={!!notifyingId} onClose={() => setNotifyingId(null)} title={t('notify_students_title')}>
+                <p className="mb-6 text-sm text-gray-600">{t('notify_students_email_desc')}</p>
                 <div className="flex justify-end gap-3">
-                    <button onClick={() => setNotifyingId(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-                    <button onClick={() => confirmNotify(notifyingId)} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Send Emails</button>
+                    <button onClick={() => setNotifyingId(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">{t('cancel')}</button>
+                    <button onClick={() => confirmNotify(notifyingId)} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">{t('send_emails_btn')}</button>
                 </div>
             </Modal>
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8">
                     {events.length === 0 ? (
-                        <div className="rounded-xl bg-white p-10 text-center text-sm text-gray-400 shadow-sm">No events yet.</div>
+                        <div className="rounded-xl bg-white p-10 text-center text-sm text-gray-400 shadow-sm">{t('no_events_admin')}</div>
                     ) : (
                         events.map((ev) => (
                             <div key={ev.id} className="overflow-hidden rounded-xl bg-white shadow-sm">
@@ -204,18 +205,18 @@ export default function Events({ events }) {
                                         <div className="mt-2 flex flex-wrap gap-4 text-xs text-gray-500">
                                             <span>📍 {ev.location}</span>
                                             <span>📅 {fmt(ev.starts_at)}</span>
-                                            <span>👥 {ev.registered_users_count}{ev.max_participants ? ` / ${ev.max_participants}` : ''} registered</span>
-                                            <span>By {ev.organizer?.name}</span>
+                                            <span>👥 {ev.registered_users_count}{ev.max_participants ? ` / ${ev.max_participants}` : ''} {t('registered_count_label')}</span>
+                                            <span>{t('by_organizer')} {ev.organizer?.name}</span>
                                         </div>
                                     </div>
 
                                     <div className="flex shrink-0 flex-col items-end gap-2">
                                         <div className="flex gap-1">
-                                            <button onClick={() => setEditing(ev)} className="rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50">Edit</button>
-                                            <button onClick={() => setDeletingId(ev.id)} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50">Delete</button>
+                                            <button onClick={() => setEditing(ev)} className="rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50">{t('edit')}</button>
+                                            <button onClick={() => setDeletingId(ev.id)} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50">{t('delete')}</button>
                                         </div>
                                         <button onClick={() => setNotifyingId(ev.id)} className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 px-2.5 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50">
-                                            📧 Notify Students
+                                            📧 {t('notify_students_title')}
                                         </button>
                                     </div>
                                 </div>

@@ -103,6 +103,7 @@ export default function TeacherLayout({ header, children }) {
         { href: route('teacher.attendance.index'),    icon: '✅', label: t('nav_attendance'),          desc: t('desc_attendance_teacher'), active: r('teacher.attendance.*') },
         { href: route('teacher.results.index'),       icon: '📊', label: t('nav_results_teacher'),     desc: t('desc_results_teacher'),    active: r('teacher.results.*') },
         { href: route('teacher.course-files.index'),  icon: '📄', label: t('nav_course_files_teacher'), desc: t('desc_course_files'),       active: r('teacher.course-files.*') },
+        { href: route('teacher.tps.index'),            icon: '🧪', label: t('nav_tps'),                  desc: t('desc_tps_teacher'),        active: r('teacher.tps.*') },
     ];
 
     const planningItems = [
@@ -182,6 +183,7 @@ export default function TeacherLayout({ header, children }) {
                             <MobileNavItem href={route('teacher.attendance.index')}    active={r('teacher.attendance.*')}    icon="✅" label={t('nav_attendance')} />
                             <MobileNavItem href={route('teacher.results.index')}       active={r('teacher.results.*')}       icon="📊" label={t('nav_results_teacher')} />
                             <MobileNavItem href={route('teacher.course-files.index')}  active={r('teacher.course-files.*')}  icon="📄" label={t('nav_course_files_teacher')} />
+                            <MobileNavItem href={route('teacher.tps.index')}           active={r('teacher.tps.*')}           icon="🧪" label={t('nav_tps')} />
                             <MobileNavItem href={route('teacher.schedule')}            active={r('teacher.schedule')}        icon="🗓️" label={t('nav_schedule')} />
                             <MobileNavItem href={route('teacher.events.index')}        active={r('teacher.events.*')}        icon="🎉" label={<>{t('nav_events')} {new_events_count > 0 && <span className="ml-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{new_events_count}</span>}</>} />
                         </div>

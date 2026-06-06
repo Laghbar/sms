@@ -77,7 +77,7 @@ export default function Dashboard({ profile, modules, pending_tps }) {
                             <table className="min-w-full divide-y divide-gray-50">
                                 <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-400">
                                     <tr>
-                                        <th className="px-5 py-3 text-left">Module</th>
+                                        <th className="px-5 py-3 text-left">{t('col_module')}</th>
                                         <th className="px-5 py-3 text-left">{t('teacher')}</th>
                                         <th className="px-5 py-3 text-center">{t('coefficient')}</th>
                                         <th className="px-5 py-3 text-center">{t('grade')}</th>

@@ -1,6 +1,7 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const STATUS_STYLES = {
     upcoming: 'bg-blue-100 text-blue-700',
@@ -24,7 +25,7 @@ function buildCalendar(year, month) {
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS_HDR = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-function CalendarView({ events }) {
+function CalendarView({ events, t }) {
     const today = new Date();
     const [year, setYear]   = useState(today.getFullYear());
     const [month, setMonth] = useState(today.getMonth());
@@ -106,7 +107,7 @@ function CalendarView({ events }) {
                 <div className="rounded-xl bg-white p-4 shadow-sm">
                     <p className="mb-3 text-sm font-semibold text-gray-700">{MONTHS[month]} {selected}</p>
                     {selectedEvents.length === 0 ? (
-                        <p className="text-sm text-gray-400">No events on this day.</p>
+                        <p className="text-sm text-gray-400">{t('no_day_events')}</p>
                     ) : (
                         <div className="space-y-3">
                             {selectedEvents.map((e) => (
@@ -126,7 +127,7 @@ function CalendarView({ events }) {
     );
 }
 
-function EventCard({ ev }) {
+function EventCard({ ev, t }) {
     function toggle() {
         if (ev.is_registered) {
             router.delete(route('student.events.unregister', ev.id));
@@ -150,7 +151,7 @@ function EventCard({ ev }) {
                 <div className="mt-3 space-y-1 text-xs text-gray-500">
                     <p>📍 {ev.location}</p>
                     <p>📅 {fmt(ev.starts_at)}</p>
-                    <p>👥 {ev.registered_users_count}{ev.max_participants ? ` / ${ev.max_participants}` : ''} registered</p>
+                    <p>👥 {ev.registered_users_count}{ev.max_participants ? ` / ${ev.max_participants}` : ''} {t('registered_count_label')}</p>
                 </div>
                 {ev.status !== 'past' && (
                     <button
@@ -164,11 +165,11 @@ function EventCard({ ev }) {
                         }`}
                         disabled={!ev.is_registered && ev.is_full}
                     >
-                        {ev.is_registered ? '✓ Registered — Cancel' : ev.is_full ? 'Event Full' : 'Register'}
+                        {ev.is_registered ? t('cancel_participation') : ev.is_full ? t('event_full_label') : t('register_label')}
                     </button>
                 )}
                 {ev.is_registered && ev.status === 'past' && (
-                    <p className="mt-3 text-center text-xs font-medium text-green-600">✓ You attended this event</p>
+                    <p className="mt-3 text-center text-xs font-medium text-green-600">{t('attended_label')}</p>
                 )}
             </div>
         </div>
@@ -176,6 +177,7 @@ function EventCard({ ev }) {
 }
 
 export default function Events({ events }) {
+    const { t } = useLanguage();
     const [view, setView] = useState('list');
 
     const upcoming  = events.filter(e => e.status !== 'past');
@@ -183,8 +185,8 @@ export default function Events({ events }) {
     const registered = events.filter(e => e.is_registered);
 
     return (
-        <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Events</h2>}>
-            <Head title="Events" />
+        <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('nav_events')}</h2>}>
+            <Head title={t('nav_events')} />
 
             <div className="py-8">
                 <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
@@ -192,9 +194,9 @@ export default function Events({ events }) {
                     {/* Stats strip */}
                     <div className="grid grid-cols-3 gap-4">
                         {[
-                            { label: 'Upcoming', value: upcoming.length, color: 'text-blue-600' },
-                            { label: 'Registered', value: registered.length, color: 'text-indigo-600' },
-                            { label: 'Past', value: past.length, color: 'text-gray-500' },
+                            { label: t('upcoming_stat'), value: upcoming.length, color: 'text-blue-600' },
+                            { label: t('registered_stat'), value: registered.length, color: 'text-indigo-600' },
+                            { label: t('past_stat'), value: past.length, color: 'text-gray-500' },
                         ].map(s => (
                             <div key={s.label} className="rounded-xl bg-white p-4 text-center shadow-sm">
                                 <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -206,39 +208,39 @@ export default function Events({ events }) {
                     {/* View toggle */}
                     <div className="flex items-center justify-between">
                         <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 shadow-sm">
-                            {[{ v: 'list', l: 'List' }, { v: 'calendar', l: 'Calendar' }].map(t => (
-                                <button key={t.v} onClick={() => setView(t.v)}
-                                    className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${view === t.v ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700'}`}>
-                                    {t.v === 'list' ? '☰' : '📅'} {t.l}
+                            {[{ v: 'list', l: t('list_view') }, { v: 'calendar', l: t('calendar_view') }].map(tb => (
+                                <button key={tb.v} onClick={() => setView(tb.v)}
+                                    className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${view === tb.v ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700'}`}>
+                                    {tb.v === 'list' ? '☰' : '📅'} {tb.l}
                                 </button>
                             ))}
                         </div>
                     </div>
 
                     {/* Calendar view */}
-                    {view === 'calendar' && <CalendarView events={events} />}
+                    {view === 'calendar' && <CalendarView events={events} t={t} />}
 
                     {/* List view */}
                     {view === 'list' && (
                         <div className="space-y-8">
                             {events.length === 0 && (
-                                <div className="rounded-xl bg-white p-10 text-center text-sm text-gray-400 shadow-sm">No events announced yet.</div>
+                                <div className="rounded-xl bg-white p-10 text-center text-sm text-gray-400 shadow-sm">{t('no_events_yet')}</div>
                             )}
 
                             {upcoming.length > 0 && (
                                 <section>
-                                    <h3 className="mb-3 text-sm font-semibold text-gray-600">Upcoming Events</h3>
+                                    <h3 className="mb-3 text-sm font-semibold text-gray-600">{t('upcoming_events_title')}</h3>
                                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                                        {upcoming.map(ev => <EventCard key={ev.id} ev={ev} />)}
+                                        {upcoming.map(ev => <EventCard key={ev.id} ev={ev} t={t} />)}
                                     </div>
                                 </section>
                             )}
 
                             {past.length > 0 && (
                                 <section>
-                                    <h3 className="mb-3 text-sm font-semibold text-gray-400">Past Events</h3>
+                                    <h3 className="mb-3 text-sm font-semibold text-gray-400">{t('past_events_title')}</h3>
                                     <div className="grid gap-5 opacity-60 sm:grid-cols-2 lg:grid-cols-3">
-                                        {past.map(ev => <EventCard key={ev.id} ev={ev} />)}
+                                        {past.map(ev => <EventCard key={ev.id} ev={ev} t={t} />)}
                                     </div>
                                 </section>
                             )}

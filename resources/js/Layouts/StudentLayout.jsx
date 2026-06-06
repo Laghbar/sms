@@ -133,7 +133,7 @@ export default function StudentLayout({ header, children }) {
                                 {t('lang_toggle')}
                             </button>
                             <NotificationBell />
-                            <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800">Student</span>
+                            <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800">{t('student_badge')}</span>
                             <Dropdown>
                                 <Dropdown.Trigger>
                                     <button type="button" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition">

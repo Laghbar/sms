@@ -1,11 +1,14 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import ScheduleGrid from '@/Components/ScheduleGrid';
 import { Head } from '@inertiajs/react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function Schedule({ schedules }) {
+    const { t } = useLanguage();
+
     return (
-        <TeacherLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">My Schedule</h2>}>
-            <Head title="My Schedule" />
+        <TeacherLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('my_schedule_title')}</h2>}>
+            <Head title={t('my_schedule_title')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4">

@@ -1,13 +1,14 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { useState } from 'react';
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */
-function SemBadge({ name }) {
+function SemBadge({ name, t }) {
     if (name === 'graduate') {
         return (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-700">
-                🎓 Graduate
+                🎓 {t('graduating_label').replace(' ✓', '')}
             </span>
         );
     }
@@ -27,27 +28,27 @@ function Arrow() {
 }
 
 /* ── Pending state: waiting for grades ───────────────────────────────── */
-function PendingRow({ row }) {
+function PendingRow({ row, t }) {
     const [open, setOpen] = useState(false);
 
     return (
         <div className="px-5 py-4 space-y-2">
             <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 w-44 shrink-0">
-                    <SemBadge name={row.from} />
+                    <SemBadge name={row.from} t={t} />
                     <Arrow />
-                    <SemBadge name={row.to} />
+                    <SemBadge name={row.to} t={t} />
                 </div>
-                <span className="text-xs text-gray-400">{row.total} student{row.total !== 1 ? 's' : ''}</span>
+                <span className="text-xs text-gray-400">{row.total} {t('student')}{row.total !== 1 ? 's' : ''}</span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-semibold text-amber-700">
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Waiting for {row.incomplete_modules.length} teacher{row.incomplete_modules.length !== 1 ? 's' : ''} to submit grades
+                    {t('waiting_for')} {row.incomplete_modules.length} {t('teacher')}{row.incomplete_modules.length !== 1 ? 's' : ''} {t('to_submit_grades')}
                 </span>
                 <button onClick={() => setOpen(!open)}
                     className="ml-auto text-xs text-indigo-500 hover:underline">
-                    {open ? 'Hide' : 'Show'} details
+                    {open ? t('hide_details') : t('show_details')}
                 </button>
             </div>
 
@@ -58,7 +59,7 @@ function PendingRow({ row }) {
                             <span className="font-medium text-gray-700">{m.name}</span>
                             <span className="text-gray-500">{m.teacher}</span>
                             <span className="rounded-full bg-white border border-amber-200 px-2 py-0.5 text-amber-700 font-semibold">
-                                {m.graded}/{m.total} graded
+                                {m.graded}/{m.total} {t('graded_label')}
                             </span>
                         </div>
                     ))}
@@ -69,33 +70,33 @@ function PendingRow({ row }) {
 }
 
 /* ── Ready state: all grades in, show results ────────────────────────── */
-function ReadyRow({ row }) {
+function ReadyRow({ row, t }) {
     const isGrad = row.to === 'graduate';
     return (
         <div className="flex flex-wrap items-center gap-3 px-5 py-4">
             <div className="flex items-center gap-2 w-44 shrink-0">
-                <SemBadge name={row.from} />
+                <SemBadge name={row.from} t={t} />
                 <Arrow />
-                <SemBadge name={row.to} />
+                <SemBadge name={row.to} t={t} />
             </div>
             <span className="text-xs text-gray-400 w-24 shrink-0">
-                {row.total} student{row.total !== 1 ? 's' : ''}
+                {row.total} {t('student')}{row.total !== 1 ? 's' : ''}
             </span>
             <div className="flex flex-wrap gap-2">
                 {row.advancing > 0 && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                        <strong>{row.advancing}</strong> {isGrad ? 'graduating ✓' : 'advancing ✓'}
+                        <strong>{row.advancing}</strong> {isGrad ? t('graduating_label') : t('advancing_ok_label')}
                     </span>
                 )}
                 {row.repeating > 0 && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-600">
-                        <strong>{row.repeating}</strong> repeating (avg &lt; 10)
+                        <strong>{row.repeating}</strong> {t('repeating_label')}
                     </span>
                 )}
             </div>
             {row.warn_modules && (
                 <span className="ml-auto rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
-                    ⚠ {row.to} has no modules yet
+                    ⚠ {row.to} {t('no_modules_semester')}
                 </span>
             )}
         </div>
@@ -103,7 +104,7 @@ function ReadyRow({ row }) {
 }
 
 /* ── Spec card ───────────────────────────────────────────────────────── */
-function SpecCard({ spec }) {
+function SpecCard({ spec, t }) {
     return (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50 px-5 py-3">
@@ -115,8 +116,8 @@ function SpecCard({ spec }) {
             <div className="divide-y divide-gray-50">
                 {spec.rows.map((row, i) =>
                     row.grades_complete
-                        ? <ReadyRow key={i} row={row} />
-                        : <PendingRow key={i} row={row} />
+                        ? <ReadyRow key={i} row={row} t={t} />
+                        : <PendingRow key={i} row={row} t={t} />
                 )}
             </div>
         </div>
@@ -126,6 +127,7 @@ function SpecCard({ spec }) {
 /* ── Page ────────────────────────────────────────────────────────────── */
 export default function Advancement({ preview }) {
     const { flash }               = usePage().props;
+    const { t }                   = useLanguage();
     const [confirmed, setConfirmed] = useState(false);
     const { post, processing }    = useForm({});
 
@@ -138,8 +140,8 @@ export default function Advancement({ preview }) {
     }
 
     return (
-        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Semester Advancement</h2>}>
-            <Head title="Semester Advancement" />
+        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('advancement_title')}</h2>}>
+            <Head title={t('advancement_title')} />
 
             <div className="py-10">
                 <div className="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
@@ -156,11 +158,11 @@ export default function Advancement({ preview }) {
 
                     {/* Info */}
                     <div className="rounded-xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-blue-800 space-y-1">
-                        <p className="font-semibold">How advancement works</p>
+                        <p className="font-semibold">{t('advancement_how_works')}</p>
                         <ul className="list-inside list-disc space-y-0.5 text-blue-700">
-                            <li>Results are shown only once <strong>all teachers have submitted every grade</strong> for the semester.</li>
-                            <li>A student advances if their <strong>weighted average ≥ 10/20</strong>. Below 10 → repeats.</li>
-                            <li>S4 students who pass are <strong>graduated</strong> (removed from all modules).</li>
+                            <li>{t('advancement_rule1')}</li>
+                            <li>{t('advancement_rule2')}</li>
+                            <li>{t('advancement_rule3')}</li>
                         </ul>
                     </div>
 
@@ -168,7 +170,7 @@ export default function Advancement({ preview }) {
                     {preview.nothing_to_do && (
                         <div className="rounded-xl bg-white px-6 py-12 text-center shadow-sm">
                             <p className="text-2xl mb-2">✅</p>
-                            <p className="text-gray-600 font-medium">No active students found.</p>
+                            <p className="text-gray-600 font-medium">{t('no_active_students')}</p>
                         </div>
                     )}
 
@@ -180,11 +182,10 @@ export default function Advancement({ preview }) {
                             </svg>
                             <div>
                                 <p className="font-semibold">
-                                    Waiting for grades in {preview.total_pending} semester{preview.total_pending !== 1 ? 's' : ''}
+                                    {t('waiting_for')} {preview.total_pending} {t('semester')}{preview.total_pending !== 1 ? 's' : ''}
                                 </p>
                                 <p className="text-amber-700 mt-0.5">
-                                    Advancement results will appear once all teachers have submitted their grades.
-                                    Expand each row below to see which modules are still pending.
+                                    {t('waiting_grades_desc')}
                                 </p>
                             </div>
                         </div>
@@ -192,22 +193,23 @@ export default function Advancement({ preview }) {
 
                     {/* Spec cards */}
                     {preview.specs.map((spec) => (
-                        <SpecCard key={spec.id} spec={spec} />
+                        <SpecCard key={spec.id} spec={spec} t={t} />
                     ))}
 
                     {/* Confirm & submit — only when ALL semesters are fully graded */}
                     {preview.ready_to_advance && (
                         <form onSubmit={submit}
                             className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
-                            <h3 className="font-semibold text-gray-900">Confirm Advancement</h3>
+                            <h3 className="font-semibold text-gray-900">{t('confirm_advancement')}</h3>
                             <label className="flex cursor-pointer items-start gap-3">
                                 <input type="checkbox" checked={confirmed}
                                     onChange={(e) => setConfirmed(e.target.checked)}
                                     className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
                                 <span className="text-sm text-gray-700">
-                                    I confirm: <strong>{preview.total_advancing}</strong> student{preview.total_advancing !== 1 ? 's' : ''} will advance,{' '}
-                                    <strong>{preview.total_graduating}</strong> will graduate,{' '}
-                                    and <strong>{preview.total_repeating}</strong> will repeat. This cannot be undone.
+                                    {t('confirm')}:&nbsp;
+                                    <strong>{preview.total_advancing}</strong> {t('student')}{preview.total_advancing !== 1 ? 's' : ''} {t('advancing_ok_label')},{' '}
+                                    <strong>{preview.total_graduating}</strong> {t('graduating_label')},{' '}
+                                    {t('and')} <strong>{preview.total_repeating}</strong> {t('repeating_label')}.
                                 </span>
                             </label>
                             <div className="flex justify-end">
@@ -219,14 +221,14 @@ export default function Advancement({ preview }) {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                                             </svg>
-                                            Advancing…
+                                            {t('advancing_progress')}
                                         </>
                                     ) : (
                                         <>
                                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5-5 5M6 12h12" />
                                             </svg>
-                                            Advance All Students
+                                            {t('advance_btn')}
                                         </>
                                     )}
                                 </button>

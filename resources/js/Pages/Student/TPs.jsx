@@ -1,47 +1,50 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head } from '@inertiajs/react';
-
-const STATUS = {
-    upcoming:  { label: 'Upcoming',  classes: 'bg-blue-100 text-blue-700' },
-    due_today: { label: 'Due Today', classes: 'bg-amber-100 text-amber-700' },
-    overdue:   { label: 'Overdue',   classes: 'bg-red-100 text-red-700' },
-};
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function daysUntil(dateStr) {
+function daysUntil(dateStr, t) {
     const diff = Math.ceil((new Date(dateStr) - new Date().setHours(0,0,0,0)) / 86400000);
-    if (diff < 0)  return `${Math.abs(diff)}d overdue`;
-    if (diff === 0) return 'Due today';
-    return `${diff}d left`;
+    if (diff < 0)  return `${Math.abs(diff)}${t('d_overdue_label')}`;
+    if (diff === 0) return t('due_today_label');
+    return `${diff}${t('d_left_label')}`;
 }
 
 export default function TPs({ tps }) {
+    const { t } = useLanguage();
+
+    const STATUS = {
+        upcoming:  { label: t('tp_status_upcoming'),  classes: 'bg-blue-100 text-blue-700' },
+        due_today: { label: t('tp_status_due_today'), classes: 'bg-amber-100 text-amber-700' },
+        overdue:   { label: t('tp_status_overdue'),   classes: 'bg-red-100 text-red-700' },
+    };
+
     const groups = {
-        due_today: tps.filter(t => t.status === 'due_today'),
-        upcoming:  tps.filter(t => t.status === 'upcoming'),
-        overdue:   tps.filter(t => t.status === 'overdue'),
+        due_today: tps.filter(tp => tp.status === 'due_today'),
+        upcoming:  tps.filter(tp => tp.status === 'upcoming'),
+        overdue:   tps.filter(tp => tp.status === 'overdue'),
     };
 
     return (
-        <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Practical Work (TPs)</h2>}>
-            <Head title="TPs" />
+        <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('practical_work')}</h2>}>
+            <Head title={t('nav_tps')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
 
                     {tps.length === 0 && (
                         <div className="rounded-xl bg-white p-10 text-center text-sm text-gray-400 shadow-sm">
-                            No TPs assigned yet.
+                            {t('no_tps_student')}
                         </div>
                     )}
 
                     {[
-                        { key: 'due_today', title: '⚠️ Due Today' },
-                        { key: 'upcoming',  title: '📅 Upcoming' },
-                        { key: 'overdue',   title: '🔴 Overdue' },
+                        { key: 'due_today', title: t('tp_due_today_group') },
+                        { key: 'upcoming',  title: t('tp_upcoming_group') },
+                        { key: 'overdue',   title: t('tp_overdue_group') },
                     ].map(({ key, title }) => {
                         const items = groups[key];
                         if (!items.length) return null;
@@ -73,9 +76,9 @@ export default function TPs({ tps }) {
                                                 <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-5 py-3 text-xs text-gray-500">
                                                     <span>📅 {formatDate(tp.due_date)}</span>
                                                     <span className={key === 'overdue' ? 'text-red-500 font-medium' : key === 'due_today' ? 'text-amber-600 font-medium' : ''}>
-                                                        {daysUntil(tp.due_date)}
+                                                        {daysUntil(tp.due_date, t)}
                                                     </span>
-                                                    <span>Max: <strong>{tp.max_grade}</strong></span>
+                                                    <span>{t('max_label')} <strong>{tp.max_grade}</strong></span>
                                                 </div>
                                             </div>
                                         );

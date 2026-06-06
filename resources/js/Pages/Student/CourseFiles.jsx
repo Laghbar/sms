@@ -1,6 +1,7 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useCallback, useRef, useState } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const TYPE_COLORS = {
     cours: 'bg-blue-100 text-blue-700',
@@ -33,6 +34,7 @@ function daysLeft(dateStr) {
 }
 
 function TpSubmissionPanel({ file }) {
+    const { t } = useLanguage();
     const { data, setData, post, errors, processing, reset } = useForm({ file: null });
     const fileRef = useRef(null);
     const [confirmDelete, setConfirmDelete] = useState(false);
@@ -62,7 +64,7 @@ function TpSubmissionPanel({ file }) {
                                 <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
-                                Submitted
+                                {t('submitted_col')}
                             </span>
                             <span className="text-xs text-gray-400">
                                 {file.submission.file_name} · {formatDateTime(file.submission.submitted_at)}
@@ -73,7 +75,7 @@ function TpSubmissionPanel({ file }) {
                             <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                             </svg>
-                            Deadline passed — not submitted
+                            {t('closed_label')}
                         </span>
                     )}
                 </div>
@@ -85,9 +87,9 @@ function TpSubmissionPanel({ file }) {
     return (
         <div className="border-t border-amber-100 bg-amber-50 px-5 py-4 space-y-3">
             <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-amber-700">Your submission</p>
+                <p className="text-xs font-semibold text-amber-700">{t('submissions_col')}</p>
                 <span className="text-xs text-amber-600 font-medium">
-                    Deadline: {formatDate(file.due_date)} — {daysLeft(file.due_date)}
+                    {t('deadline_label')}: {formatDate(file.due_date)} — {daysLeft(file.due_date)}
                 </span>
             </div>
 
@@ -97,7 +99,7 @@ function TpSubmissionPanel({ file }) {
                     <div>
                         <p className="text-sm font-medium text-gray-800">{file.submission.file_name}</p>
                         <p className="text-xs text-gray-400">
-                            {formatSize(file.submission.file_size)} · submitted {formatDateTime(file.submission.submitted_at)}
+                            {formatSize(file.submission.file_size)} · {t('submitted_col')} {formatDateTime(file.submission.submitted_at)}
                         </p>
                     </div>
                     {!confirmDelete ? (
@@ -105,13 +107,13 @@ function TpSubmissionPanel({ file }) {
                             onClick={() => setConfirmDelete(true)}
                             className="ml-3 shrink-0 text-xs text-red-500 hover:text-red-700"
                         >
-                            Remove
+                            {t('delete')}
                         </button>
                     ) : (
                         <div className="ml-3 flex items-center gap-2">
                             <span className="text-xs text-gray-500">Sure?</span>
-                            <button onClick={deleteSubmission} className="text-xs font-medium text-red-600 hover:text-red-800">Yes</button>
-                            <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-500 hover:text-gray-700">No</button>
+                            <button onClick={deleteSubmission} className="text-xs font-medium text-red-600 hover:text-red-800">{t('confirm')}</button>
+                            <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-500 hover:text-gray-700">{t('cancel')}</button>
                         </div>
                     )}
                 </div>
@@ -134,7 +136,7 @@ function TpSubmissionPanel({ file }) {
                     disabled={processing || !data.file}
                     className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-600 disabled:opacity-50"
                 >
-                    {processing ? 'Submitting…' : file.submission ? 'Re-submit' : 'Submit'}
+                    {processing ? t('uploading_label') : file.submission ? t('upload') : t('submit_request')}
                 </button>
             </form>
         </div>
@@ -142,6 +144,7 @@ function TpSubmissionPanel({ file }) {
 }
 
 export default function CourseFiles({ files, modules, filters }) {
+    const { t } = useLanguage();
     const { flash } = usePage().props;
     const [moduleFilter, setModuleFilter] = useState(filters.module_id ?? '');
     const [typeFilter, setTypeFilter]     = useState(filters.type ?? '');
@@ -160,8 +163,8 @@ export default function CourseFiles({ files, modules, filters }) {
     files.forEach((f) => grouped[f.type]?.push(f));
 
     return (
-        <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Course Files</h2>}>
-            <Head title="Course Files" />
+        <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('nav_course_files')}</h2>}>
+            <Head title={t('nav_course_files')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
@@ -175,18 +178,18 @@ export default function CourseFiles({ files, modules, filters }) {
                     {/* Filters */}
                     <div className="flex flex-wrap items-center gap-3">
                         <select value={moduleFilter} onChange={handleModuleFilter} className="rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
-                            <option value="">All modules</option>
+                            <option value="">{t('all_modules_filter')}</option>
                             {modules.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}
                         </select>
                         <select value={typeFilter} onChange={handleTypeFilter} className="rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
-                            <option value="">All types</option>
+                            <option value="">{t('all_types_filter')}</option>
                             <option value="cours">Cours</option>
                             <option value="td">TD</option>
                             <option value="tp">TP</option>
                         </select>
                         {(moduleFilter || typeFilter) && (
                             <button onClick={() => { setModuleFilter(''); setTypeFilter(''); applyFilters('', ''); }} className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50">
-                                Clear
+                                {t('clear')}
                             </button>
                         )}
                         <span className="ms-auto text-sm text-gray-400">{files.length} file{files.length !== 1 ? 's' : ''}</span>
@@ -194,7 +197,7 @@ export default function CourseFiles({ files, modules, filters }) {
 
                     {files.length === 0 && (
                         <div className="rounded-xl bg-white p-10 text-center shadow-sm">
-                            <p className="text-sm text-gray-400">No files available yet. Check back later.</p>
+                            <p className="text-sm text-gray-400">{t('no_files_yet')}</p>
                         </div>
                     )}
 
@@ -250,7 +253,7 @@ export default function CourseFiles({ files, modules, filters }) {
                                                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                                         </svg>
-                                                        Download
+                                                        {t('download')}
                                                     </a>
                                                 </div>
                                             </div>

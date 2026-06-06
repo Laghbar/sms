@@ -1,15 +1,15 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { useCallback, useEffect, useState } from 'react';
 
 /* ── Badges ─────────────────────────────────────────────────────────── */
-const ROLE_LABELS = {
-    teacher: { label: 'Teacher', classes: 'bg-blue-100 text-blue-700' },
-    student: { label: 'Student', classes: 'bg-emerald-100 text-emerald-700' },
-};
-
-function RoleBadge({ role }) {
-    const cfg = ROLE_LABELS[role] ?? { label: role, classes: 'bg-gray-100 text-gray-700' };
+function RoleBadge({ role, t }) {
+    const cfg = role === 'teacher'
+        ? { label: t('teacher_badge'), classes: 'bg-blue-100 text-blue-700' }
+        : role === 'student'
+        ? { label: t('student_badge'), classes: 'bg-emerald-100 text-emerald-700' }
+        : { label: role, classes: 'bg-gray-100 text-gray-700' };
     return (
         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${cfg.classes}`}>
             {cfg.label}
@@ -17,11 +17,11 @@ function RoleBadge({ role }) {
     );
 }
 
-function SpecBadge({ specialization, semester }) {
+function SpecBadge({ specialization, semester, t }) {
     if (!specialization) {
         return (
             <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-400">
-                Not assigned
+                {t('unassigned')}
             </span>
         );
     }
@@ -39,9 +39,9 @@ function SpecBadge({ specialization, semester }) {
     );
 }
 
-function TeacherModules({ modules }) {
+function TeacherModules({ modules, t }) {
     if (!modules || modules.length === 0) {
-        return <span className="text-xs text-gray-300">No module</span>;
+        return <span className="text-xs text-gray-300">{t('no_modules_assigned')}</span>;
     }
     return (
         <div className="flex flex-wrap gap-1">
@@ -77,7 +77,7 @@ function Pagination({ links }) {
 }
 
 /* ── Create Student modal ────────────────────────────────────────────── */
-function CreateUserModal({ specializations, semesters, modules, onClose }) {
+function CreateUserModal({ specializations, semesters, modules, onClose, t }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         role:                  'student',
         name:                  '',
@@ -118,7 +118,7 @@ function CreateUserModal({ specializations, semesters, modules, onClose }) {
     }
 
     const field = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400';
-    const roleBtn = (r, label, color) =>
+    const roleBtn = (r, color) =>
         `flex-1 rounded-lg py-2 text-sm font-semibold transition border ${
             data.role === r
                 ? `${color} text-white border-transparent shadow-sm`
@@ -130,7 +130,7 @@ function CreateUserModal({ specializations, semesters, modules, onClose }) {
             <div className={`w-full ${isStudent ? 'max-w-md' : 'max-w-lg'} flex flex-col max-h-[90vh] rounded-xl bg-white shadow-xl`} onClick={(e) => e.stopPropagation()}>
                 {/* Fixed header */}
                 <div className="px-6 pt-6 pb-4 border-b border-gray-100">
-                    <h3 className="text-base font-semibold text-gray-900">Add New User</h3>
+                    <h3 className="text-base font-semibold text-gray-900">{t('add_new_user')}</h3>
                 </div>
 
                 <form onSubmit={submit} className="flex flex-col flex-1 min-h-0">
@@ -138,19 +138,19 @@ function CreateUserModal({ specializations, semesters, modules, onClose }) {
                 <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
                     {/* Role toggle */}
                     <div className="flex gap-2">
-                        <button type="button" className={roleBtn('student', 'Student', 'bg-emerald-600')}
+                        <button type="button" className={roleBtn('student', 'bg-emerald-600')}
                             onClick={() => handleRoleChange('student')}>
-                            Student
+                            {t('student_badge')}
                         </button>
-                        <button type="button" className={roleBtn('teacher', 'Teacher', 'bg-blue-600')}
+                        <button type="button" className={roleBtn('teacher', 'bg-blue-600')}
                             onClick={() => handleRoleChange('teacher')}>
-                            Teacher
+                            {t('teacher_badge')}
                         </button>
                     </div>
 
                     {/* Name */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">Full Name</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">{t('full_name')}</label>
                         <input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)}
                             placeholder={isStudent ? 'e.g. Ahmed Benali' : 'e.g. Dr. Kamel Bouzidi'}
                             className={field} autoFocus />
@@ -159,7 +159,7 @@ function CreateUserModal({ specializations, semesters, modules, onClose }) {
 
                     {/* Email */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">{t('email_label')}</label>
                         <input type="email" value={data.email} onChange={(e) => setData('email', e.target.value)}
                             placeholder={isStudent ? 'student@sms.com' : 'teacher@sms.com'}
                             className={field} />
@@ -169,13 +169,13 @@ function CreateUserModal({ specializations, semesters, modules, onClose }) {
                     {/* Password */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Password</label>
+                            <label className="mb-1 block text-sm font-medium text-gray-700">{t('password_label')}</label>
                             <input type="password" value={data.password} onChange={(e) => setData('password', e.target.value)}
                                 placeholder="Min. 8 characters" className={field} />
                             {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
                         </div>
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Confirm</label>
+                            <label className="mb-1 block text-sm font-medium text-gray-700">{t('confirm_label')}</label>
                             <input type="password" value={data.password_confirmation} onChange={(e) => setData('password_confirmation', e.target.value)}
                                 placeholder="Repeat password" className={field} />
                         </div>
@@ -185,7 +185,7 @@ function CreateUserModal({ specializations, semesters, modules, onClose }) {
                     {isStudent && (
                         <>
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Specialization</label>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">{t('specialization')}</label>
                                 <select value={data.specialization_id} onChange={(e) => handleSpecChange(e.target.value)} className={field}>
                                     <option value="">— Select specialization —</option>
                                     {specializations.map((s) => (
@@ -195,7 +195,7 @@ function CreateUserModal({ specializations, semesters, modules, onClose }) {
                                 {errors.specialization_id && <p className="mt-1 text-xs text-red-500">{errors.specialization_id}</p>}
                             </div>
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Semester</label>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">{t('semester')}</label>
                                 <select value={data.semester_id} onChange={(e) => setData('semester_id', e.target.value)}
                                     className={field} disabled={!data.specialization_id}>
                                     <option value="">— Select semester —</option>
@@ -206,7 +206,7 @@ function CreateUserModal({ specializations, semesters, modules, onClose }) {
                                 {errors.semester_id && <p className="mt-1 text-xs text-red-500">{errors.semester_id}</p>}
                                 {data.specialization_id && data.semester_id && (
                                     <p className="mt-1 text-xs text-indigo-500">
-                                        Student will be auto-enrolled in all modules for this semester.
+                                        {t('auto_enrolled_hint')}
                                     </p>
                                 )}
                             </div>
@@ -217,14 +217,14 @@ function CreateUserModal({ specializations, semesters, modules, onClose }) {
                     {!isStudent && (
                         <div>
                             <label className="mb-2 block text-sm font-medium text-gray-700">
-                                Assign Modules
+                                {t('assign_modules')}
                                 <span className="ml-1 text-xs font-normal text-gray-400">
-                                    ({data.module_ids.length} selected)
+                                    ({data.module_ids.length} {t('selected_count')})
                                 </span>
                             </label>
                             <div className="max-h-52 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
                                 {modules.length === 0 ? (
-                                    <p className="px-3 py-4 text-center text-xs text-gray-400">No modules available.</p>
+                                    <p className="px-3 py-4 text-center text-xs text-gray-400">{t('no_modules_available')}</p>
                                 ) : (
                                     modules.map((m) => {
                                         const checked = data.module_ids.includes(m.id);
@@ -252,11 +252,11 @@ function CreateUserModal({ specializations, semesters, modules, onClose }) {
                 <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
                     <button type="button" onClick={onClose}
                         className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                        Cancel
+                        {t('cancel')}
                     </button>
                     <button type="submit" disabled={processing}
                         className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60 ${isStudent ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
-                        {processing ? 'Creating…' : `Create ${isStudent ? 'Student' : 'Teacher'}`}
+                        {processing ? t('loading') : `${t('add')} ${isStudent ? t('student_badge') : t('teacher_badge')}`}
                     </button>
                 </div>
                 </form>
@@ -266,7 +266,7 @@ function CreateUserModal({ specializations, semesters, modules, onClose }) {
 }
 
 /* ── Edit modal ──────────────────────────────────────────────────────── */
-function EditModal({ user, specializations, semesters, modules, onClose }) {
+function EditModal({ user, specializations, semesters, modules, onClose, t }) {
     const { data, setData, patch, processing, errors } = useForm({
         name:              user.name,
         specialization_id: user.specialization?.id ?? '',
@@ -301,13 +301,13 @@ function EditModal({ user, specializations, semesters, modules, onClose }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
             <div className={`w-full ${user.role === 'teacher' ? 'max-w-lg' : 'max-w-md'} rounded-xl bg-white p-6 shadow-xl`} onClick={(e) => e.stopPropagation()}>
-                <h3 className="mb-1 text-base font-semibold text-gray-900">Edit User</h3>
+                <h3 className="mb-1 text-base font-semibold text-gray-900">{t('edit')} {user.role === 'teacher' ? t('teacher_badge') : t('student_badge')}</h3>
                 <p className="mb-5 text-xs text-gray-400">{user.email}</p>
 
                 <form onSubmit={submit} className="space-y-4">
                     {/* Name */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">Name</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">{t('full_name')}</label>
                         <input type="text" value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             className={field} />
@@ -319,12 +319,12 @@ function EditModal({ user, specializations, semesters, modules, onClose }) {
                         <>
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                                    Specialization
+                                    {t('specialization')}
                                 </label>
                                 <select value={data.specialization_id}
                                     onChange={(e) => handleSpecChange(e.target.value)}
                                     className={field}>
-                                    <option value="">— Not assigned —</option>
+                                    <option value="">— {t('unassigned')} —</option>
                                     {specializations.map((s) => (
                                         <option key={s.id} value={s.id}>
                                             {s.code} — {s.name}
@@ -336,7 +336,7 @@ function EditModal({ user, specializations, semesters, modules, onClose }) {
 
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                                    Semester
+                                    {t('semester')}
                                 </label>
                                 <select value={data.semester_id}
                                     onChange={(e) => setData('semester_id', e.target.value)}
@@ -350,7 +350,7 @@ function EditModal({ user, specializations, semesters, modules, onClose }) {
                                 {errors.semester_id && <p className="mt-1 text-xs text-red-500">{errors.semester_id}</p>}
                                 {data.specialization_id && data.semester_id && (
                                     <p className="mt-1 text-xs text-indigo-500">
-                                        Student will be auto-enrolled in all modules for this semester.
+                                        {t('auto_enrolled_hint')}
                                     </p>
                                 )}
                             </div>
@@ -361,9 +361,9 @@ function EditModal({ user, specializations, semesters, modules, onClose }) {
                     {user.role === 'teacher' && modules.length > 0 && (
                         <div>
                             <label className="mb-2 block text-sm font-medium text-gray-700">
-                                Modules taught
+                                {t('modules_taught_label')}
                                 <span className="ml-1 text-xs font-normal text-gray-400">
-                                    ({data.module_ids.length} selected)
+                                    ({data.module_ids.length} {t('selected_count')})
                                 </span>
                             </label>
                             <div className="max-h-52 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
@@ -393,11 +393,11 @@ function EditModal({ user, specializations, semesters, modules, onClose }) {
                     <div className="flex justify-end gap-3 pt-2">
                         <button type="button" onClick={onClose}
                             className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                            Cancel
+                            {t('cancel')}
                         </button>
                         <button type="submit" disabled={processing}
                             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
-                            {processing ? 'Saving…' : 'Save'}
+                            {processing ? t('saving_label') : t('save')}
                         </button>
                     </div>
                 </form>
@@ -407,7 +407,7 @@ function EditModal({ user, specializations, semesters, modules, onClose }) {
 }
 
 /* ── Delete action ───────────────────────────────────────────────────── */
-function DeleteAction({ user }) {
+function DeleteAction({ user, t }) {
     const [confirm, setConfirm] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
@@ -423,27 +423,27 @@ function DeleteAction({ user }) {
         return (
             <button onClick={() => setConfirm(true)}
                 className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50">
-                Delete
+                {t('delete')}
             </button>
         );
     }
 
     return (
         <div className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2 py-1">
-            <span className="text-[11px] text-red-700">Sure?</span>
+            <span className="text-[11px] text-red-700">{t('sure_prompt')}</span>
             <button onClick={destroy} disabled={deleting}
                 className="rounded bg-red-600 px-1.5 py-0.5 text-[11px] font-semibold text-white hover:bg-red-700 disabled:opacity-50">
-                {deleting ? '…' : 'Yes'}
+                {deleting ? '…' : t('yes')}
             </button>
             <button onClick={() => setConfirm(false)} className="text-[11px] text-gray-400 hover:text-gray-600">
-                No
+                {t('no')}
             </button>
         </div>
     );
 }
 
 /* ── Reset Password modal ────────────────────────────────────────────── */
-function ResetPasswordModal({ user, onClose }) {
+function ResetPasswordModal({ user, onClose, t }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         password: '',
         password_confirmation: '',
@@ -461,12 +461,12 @@ function ResetPasswordModal({ user, onClose }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
             <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-                <h3 className="mb-1 text-base font-semibold text-gray-900">Reset Password</h3>
+                <h3 className="mb-1 text-base font-semibold text-gray-900">{t('reset_password_title')}</h3>
                 <p className="mb-5 text-xs text-gray-400">{user.name} · {user.email}</p>
 
                 <form onSubmit={submit} className="space-y-4">
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">New Password</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">{t('new_password')}</label>
                         <input
                             type="password"
                             value={data.password}
@@ -478,7 +478,7 @@ function ResetPasswordModal({ user, onClose }) {
                         {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
                     </div>
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">Confirm Password</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">{t('confirm_password')}</label>
                         <input
                             type="password"
                             value={data.password_confirmation}
@@ -490,11 +490,11 @@ function ResetPasswordModal({ user, onClose }) {
                     <div className="flex justify-end gap-3 pt-1">
                         <button type="button" onClick={onClose}
                             className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                            Cancel
+                            {t('cancel')}
                         </button>
                         <button type="submit" disabled={processing}
                             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
-                            {processing ? 'Saving…' : 'Reset Password'}
+                            {processing ? t('saving_label') : t('update')}
                         </button>
                     </div>
                 </form>
@@ -506,6 +506,7 @@ function ResetPasswordModal({ user, onClose }) {
 /* ── Main page ───────────────────────────────────────────────────────── */
 export default function Users({ users, filters, specializations = [], semesters = [], modules = [] }) {
     const { flash } = usePage().props;
+    const { t } = useLanguage();
     const [search, setSearch]   = useState(filters.search ?? '');
     const [role, setRole]       = useState(filters.role ?? '');
     const [specId, setSpecId]   = useState(filters.specialization_id ?? '');
@@ -549,7 +550,7 @@ export default function Users({ users, filters, specializations = [], semesters 
     const unassigned = users.data.filter((u) => u.role === 'student' && !u.specialization).length;
 
     return (
-        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Users</h2>}>
+        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('nav_users')}</h2>}>
             <Head title="Users" />
 
             {creating && (
@@ -558,6 +559,7 @@ export default function Users({ users, filters, specializations = [], semesters 
                     semesters={semesters}
                     modules={modules}
                     onClose={() => setCreating(false)}
+                    t={t}
                 />
             )}
 
@@ -568,6 +570,7 @@ export default function Users({ users, filters, specializations = [], semesters 
                     semesters={semesters}
                     modules={modules}
                     onClose={() => setEditing(null)}
+                    t={t}
                 />
             )}
 
@@ -575,6 +578,7 @@ export default function Users({ users, filters, specializations = [], semesters 
                 <ResetPasswordModal
                     user={resetting}
                     onClose={() => setResetting(null)}
+                    t={t}
                 />
             )}
 
@@ -598,7 +602,7 @@ export default function Users({ users, filters, specializations = [], semesters 
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                             </svg>
                             <span>
-                                <strong>{unassigned}</strong> student{unassigned > 1 ? 's' : ''} on this page {unassigned > 1 ? 'have' : 'has'} no specialization assigned. Click <strong>Edit</strong> to assign one.
+                                <strong>{unassigned}</strong> student{unassigned > 1 ? 's' : ''} on this page {unassigned > 1 ? 'have' : 'has'} no specialization assigned. Click <strong>{t('edit')}</strong> to assign one.
                             </span>
                         </div>
                     )}
@@ -612,7 +616,7 @@ export default function Users({ users, filters, specializations = [], semesters 
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                     d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
                             </svg>
-                            <input type="text" placeholder="Search name or email…" value={search}
+                            <input type="text" placeholder={`${t('search')} name or email…`} value={search}
                                 onChange={handleSearch}
                                 className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400" />
                         </div>
@@ -620,16 +624,16 @@ export default function Users({ users, filters, specializations = [], semesters 
                         {/* Role */}
                         <select value={role} onChange={handleRole}
                             className="rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-400 focus:outline-none">
-                            <option value="">All roles</option>
-                            <option value="teacher">Teacher</option>
-                            <option value="student">Student</option>
+                            <option value="">{t('all')} {t('role_col')}</option>
+                            <option value="teacher">{t('teacher_badge')}</option>
+                            <option value="student">{t('student_badge')}</option>
                         </select>
 
                         {/* Specialization */}
                         {specializations.length > 0 && (
                             <select value={specId} onChange={handleSpec}
                                 className="rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-400 focus:outline-none">
-                                <option value="">All specializations</option>
+                                <option value="">{t('all_specializations')}</option>
                                 {specializations.map((s) => (
                                     <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
                                 ))}
@@ -640,7 +644,7 @@ export default function Users({ users, filters, specializations = [], semesters 
                         {visibleSemesters.length > 0 && (
                             <select value={semId} onChange={handleSem}
                                 className="rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-400 focus:outline-none">
-                                <option value="">All semesters</option>
+                                <option value="">{t('all_semesters')}</option>
                                 {visibleSemesters.map((s) => (
                                     <option key={s.id} value={s.id}>{s.name}</option>
                                 ))}
@@ -656,13 +660,13 @@ export default function Users({ users, filters, specializations = [], semesters 
                                     : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
                             }`}
                         >
-                            Not assigned
+                            {t('unassigned')}
                         </button>
 
                         {hasFilters && (
                             <button onClick={clearFilters}
                                 className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50">
-                                Clear
+                                {t('clear')}
                             </button>
                         )}
 
@@ -677,7 +681,7 @@ export default function Users({ users, filters, specializations = [], semesters 
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                                 </svg>
-                                New User
+                                {t('add_new_user')}
                             </button>
                         </div>
                     </div>
@@ -689,19 +693,19 @@ export default function Users({ users, filters, specializations = [], semesters 
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">#</th>
-                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Name</th>
-                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Email</th>
-                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Role</th>
-                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Specialization / Modules</th>
-                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Joined</th>
-                                        <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</th>
+                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('name_col')}</th>
+                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('email_label')}</th>
+                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('role_col')}</th>
+                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('specialization')} / Modules</th>
+                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('joined_col')}</th>
+                                        <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">{t('actions_col')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 bg-white">
                                     {users.data.length === 0 ? (
                                         <tr>
                                             <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-400">
-                                                No users found.
+                                                {t('no_data')}
                                             </td>
                                         </tr>
                                     ) : (
@@ -722,11 +726,11 @@ export default function Users({ users, filters, specializations = [], semesters 
                                                     </div>
                                                 </td>
                                                 <td className="px-5 py-3.5 text-sm text-gray-600">{user.email}</td>
-                                                <td className="px-5 py-3.5"><RoleBadge role={user.role} /></td>
+                                                <td className="px-5 py-3.5"><RoleBadge role={user.role} t={t} /></td>
                                                 <td className="px-5 py-3.5">
                                                     {user.role === 'teacher'
-                                                        ? <TeacherModules modules={user.teaching_modules} />
-                                                        : <SpecBadge specialization={user.specialization} semester={user.semester} />
+                                                        ? <TeacherModules modules={user.teaching_modules} t={t} />
+                                                        : <SpecBadge specialization={user.specialization} semester={user.semester} t={t} />
                                                     }
                                                 </td>
                                                 <td className="px-5 py-3.5 text-sm text-gray-500">
@@ -740,16 +744,16 @@ export default function Users({ users, filters, specializations = [], semesters 
                                                             onClick={() => setEditing(user)}
                                                             className="rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
                                                         >
-                                                            Edit
+                                                            {t('edit')}
                                                         </button>
                                                         <button
                                                             onClick={() => setResetting(user)}
                                                             className="rounded px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50"
-                                                            title="Reset password"
+                                                            title={t('reset_password_title')}
                                                         >
-                                                            Reset PWD
+                                                            {t('reset_password_title')}
                                                         </button>
-                                                        <DeleteAction user={user} />
+                                                        <DeleteAction user={user} t={t} />
                                                     </div>
                                                 </td>
                                             </tr>

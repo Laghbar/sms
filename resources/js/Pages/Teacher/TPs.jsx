@@ -1,6 +1,7 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useCallback, useState } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -36,7 +37,7 @@ function Modal({ open, onClose, title, children }) {
 
 const EMPTY_FORM = { module_id: '', title: '', description: '', due_date: '', max_grade: 20 };
 
-function TpFormModal({ tp, modules, onClose }) {
+function TpFormModal({ tp, modules, onClose, t }) {
     const isEdit = !!tp;
     const { data, setData, post, put, errors, processing, reset } = useForm(
         tp
@@ -64,13 +65,13 @@ function TpFormModal({ tp, modules, onClose }) {
     return (
         <form onSubmit={submit} className="space-y-4">
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Module</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('col_module')}</label>
                 <select
                     value={data.module_id}
                     onChange={(e) => setData('module_id', e.target.value)}
                     className={field}
                 >
-                    <option value="">Select a module…</option>
+                    <option value="">{t('select_module_ph')}</option>
                     {modules.map((m) => (
                         <option key={m.id} value={m.id}>
                             {m.name} ({m.code})
@@ -81,7 +82,7 @@ function TpFormModal({ tp, modules, onClose }) {
             </div>
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Title</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">{t('title_label')}</label>
                 <input
                     type="text"
                     value={data.title}
@@ -94,7 +95,7 @@ function TpFormModal({ tp, modules, onClose }) {
 
             <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Description <span className="font-normal text-gray-400">(optional)</span>
+                    {t('description_label')} <span className="font-normal text-gray-400">(optional)</span>
                 </label>
                 <textarea
                     value={data.description}
@@ -108,7 +109,7 @@ function TpFormModal({ tp, modules, onClose }) {
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Due Date</label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">{t('due_date_label')}</label>
                     <input
                         type="date"
                         value={data.due_date}
@@ -119,7 +120,7 @@ function TpFormModal({ tp, modules, onClose }) {
                 </div>
 
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Max Grade</label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">{t('max_grade_label')}</label>
                     <input
                         type="number"
                         value={data.max_grade}
@@ -139,14 +140,14 @@ function TpFormModal({ tp, modules, onClose }) {
                     onClick={onClose}
                     className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
                 >
-                    Cancel
+                    {t('cancel')}
                 </button>
                 <button
                     type="submit"
                     disabled={processing}
                     className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
                 >
-                    {processing ? 'Saving…' : isEdit ? 'Update TP' : 'Assign TP'}
+                    {processing ? t('loading') : isEdit ? t('update_tp_btn') : t('assign_tp_btn')}
                 </button>
             </div>
         </form>
@@ -154,6 +155,7 @@ function TpFormModal({ tp, modules, onClose }) {
 }
 
 export default function TPs({ tps, modules, filters }) {
+    const { t } = useLanguage();
     const [moduleFilter, setModuleFilter] = useState(filters.module_id ?? '');
     const [creating, setCreating]         = useState(false);
     const [editing, setEditing]           = useState(null);
@@ -185,7 +187,7 @@ export default function TPs({ tps, modules, filters }) {
         <TeacherLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">Practical Work (TPs)</h2>
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800">{t('practical_work')}</h2>
                     <button
                         onClick={() => setCreating(true)}
                         className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
@@ -193,37 +195,37 @@ export default function TPs({ tps, modules, filters }) {
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
-                        Assign TP
+                        {t('assign_tp')}
                     </button>
                 </div>
             }
         >
-            <Head title="TPs" />
+            <Head title={t('nav_tps')} />
 
-            <Modal open={creating} onClose={() => setCreating(false)} title="Assign New TP">
-                <TpFormModal modules={modules} tp={null} onClose={() => setCreating(false)} />
+            <Modal open={creating} onClose={() => setCreating(false)} title={t('assign_new_tp')}>
+                <TpFormModal modules={modules} tp={null} onClose={() => setCreating(false)} t={t} />
             </Modal>
 
-            <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit TP">
-                {editing && <TpFormModal modules={modules} tp={editing} onClose={() => setEditing(null)} />}
+            <Modal open={!!editing} onClose={() => setEditing(null)} title={t('edit_tp_title')}>
+                {editing && <TpFormModal modules={modules} tp={editing} onClose={() => setEditing(null)} t={t} />}
             </Modal>
 
-            <Modal open={!!deletingId} onClose={() => setDeletingId(null)} title="Delete TP">
+            <Modal open={!!deletingId} onClose={() => setDeletingId(null)} title={t('delete_tp_title')}>
                 <p className="mb-6 text-sm text-gray-600">
-                    This will remove the TP for all enrolled students. Are you sure?
+                    {t('delete_tp_confirm')}
                 </p>
                 <div className="flex justify-end gap-3">
                     <button
                         onClick={() => setDeletingId(null)}
                         className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
                     >
-                        Cancel
+                        {t('cancel')}
                     </button>
                     <button
                         onClick={() => confirmDelete(deletingId)}
                         className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
                     >
-                        Delete
+                        {t('delete')}
                     </button>
                 </div>
             </Modal>
@@ -238,7 +240,7 @@ export default function TPs({ tps, modules, filters }) {
                             onChange={handleModuleFilter}
                             className="rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
                         >
-                            <option value="">All modules</option>
+                            <option value="">{t('all_modules_filter')}</option>
                             {modules.map((m) => (
                                 <option key={m.id} value={m.id}>{m.name} ({m.code})</option>
                             ))}
@@ -248,7 +250,7 @@ export default function TPs({ tps, modules, filters }) {
                                 onClick={() => { setModuleFilter(''); applyFilter(''); }}
                                 className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50"
                             >
-                                Clear
+                                {t('clear')}
                             </button>
                         )}
                         <span className="text-sm text-gray-400 ms-auto">
@@ -258,12 +260,12 @@ export default function TPs({ tps, modules, filters }) {
 
                     {tps.length === 0 && (
                         <div className="rounded-xl bg-white p-10 text-center shadow-sm">
-                            <p className="text-sm text-gray-400">No TPs assigned yet.</p>
+                            <p className="text-sm text-gray-400">{t('no_tps_yet')}</p>
                             <button
                                 onClick={() => setCreating(true)}
                                 className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
                             >
-                                Assign your first TP
+                                {t('assign_first_tp')}
                             </button>
                         </div>
                     )}
@@ -271,15 +273,15 @@ export default function TPs({ tps, modules, filters }) {
                     {/* Upcoming / Active TPs */}
                     {upcoming.length > 0 && (
                         <section>
-                            <h3 className="mb-3 text-sm font-semibold text-gray-600">Active & Upcoming</h3>
+                            <h3 className="mb-3 text-sm font-semibold text-gray-600">{t('active_upcoming')}</h3>
                             <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Title</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Module</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Due Date</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Max Grade</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('title_label')}</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('col_module')}</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('due_date_label')}</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{t('max_grade_label')}</th>
                                             <th className="px-6 py-3" />
                                         </tr>
                                     </thead>
@@ -309,13 +311,13 @@ export default function TPs({ tps, modules, filters }) {
                                                                 onClick={() => setEditing(tp)}
                                                                 className="rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
                                                             >
-                                                                Edit
+                                                                {t('edit')}
                                                             </button>
                                                             <button
                                                                 onClick={() => setDeletingId(tp.id)}
                                                                 className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
                                                             >
-                                                                Delete
+                                                                {t('delete')}
                                                             </button>
                                                         </div>
                                                     </td>
@@ -331,15 +333,15 @@ export default function TPs({ tps, modules, filters }) {
                     {/* Past TPs */}
                     {past.length > 0 && (
                         <section>
-                            <h3 className="mb-3 text-sm font-semibold text-gray-500">Past TPs</h3>
+                            <h3 className="mb-3 text-sm font-semibold text-gray-500">{t('past_tps')}</h3>
                             <div className="overflow-hidden rounded-xl bg-white shadow-sm opacity-75">
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Title</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Module</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Due Date</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Max Grade</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">{t('title_label')}</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">{t('col_module')}</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">{t('due_date_label')}</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">{t('max_grade_label')}</th>
                                             <th className="px-6 py-3" />
                                         </tr>
                                     </thead>
@@ -360,13 +362,13 @@ export default function TPs({ tps, modules, filters }) {
                                                             onClick={() => setEditing(tp)}
                                                             className="rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
                                                         >
-                                                            Edit
+                                                            {t('edit')}
                                                         </button>
                                                         <button
                                                             onClick={() => setDeletingId(tp.id)}
                                                             className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
                                                         >
-                                                            Delete
+                                                            {t('delete')}
                                                         </button>
                                                     </div>
                                                 </td>

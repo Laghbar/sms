@@ -1,6 +1,7 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const TYPE_COLORS = {
     cours: 'bg-blue-100 text-blue-700',
@@ -12,16 +13,16 @@ function avatar(name) {
     return name?.charAt(0).toUpperCase() ?? '?';
 }
 
-function RoleBadge({ role }) {
+function RoleBadge({ role, t }) {
     if (role !== 'teacher') return null;
     return (
         <span className="ml-1.5 inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
-            Teacher
+            {t('teacher_badge')}
         </span>
     );
 }
 
-function CommentBubble({ comment, onReply, storeUrl, isReply = false }) {
+function CommentBubble({ comment, onReply, storeUrl, isReply = false, t }) {
     const isTeacher = comment.user.role === 'teacher';
 
     return (
@@ -33,7 +34,7 @@ function CommentBubble({ comment, onReply, storeUrl, isReply = false }) {
             <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-1">
                     <span className="text-sm font-semibold text-gray-900">{comment.user.name}</span>
-                    <RoleBadge role={comment.user.role} />
+                    <RoleBadge role={comment.user.role} t={t} />
                     <span className="text-xs text-gray-400">{comment.created_at}</span>
                 </div>
 
@@ -52,7 +53,7 @@ function CommentBubble({ comment, onReply, storeUrl, isReply = false }) {
                             onClick={() => onReply(comment)}
                             className="text-xs font-medium text-indigo-500 hover:text-indigo-700"
                         >
-                            ↩ Reply
+                            {t('reply_label')}
                         </button>
                     )}
                     {/* Teacher can delete any comment */}
@@ -63,7 +64,7 @@ function CommentBubble({ comment, onReply, storeUrl, isReply = false }) {
                         preserveScroll
                         className="text-xs text-gray-400 hover:text-red-500"
                     >
-                        Delete
+                        {t('delete')}
                     </Link>
                 </div>
             </div>
@@ -71,7 +72,7 @@ function CommentBubble({ comment, onReply, storeUrl, isReply = false }) {
     );
 }
 
-function ReplyForm({ parentComment, storeUrl, onCancel }) {
+function ReplyForm({ parentComment, storeUrl, onCancel, t }) {
     const { data, setData, post, processing, reset, errors } = useForm({
         body:      '',
         parent_id: parentComment.id,
@@ -104,14 +105,14 @@ function ReplyForm({ parentComment, storeUrl, onCancel }) {
                     disabled={processing || !data.body.trim()}
                     className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                 >
-                    {processing ? '…' : 'Reply'}
+                    {processing ? '…' : t('reply_label')}
                 </button>
                 <button
                     type="button"
                     onClick={onCancel}
                     className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50"
                 >
-                    Cancel
+                    {t('cancel')}
                 </button>
             </div>
         </form>
@@ -119,6 +120,7 @@ function ReplyForm({ parentComment, storeUrl, onCancel }) {
 }
 
 export default function CourseFileDiscussion({ courseFile, comments }) {
+    const { t } = useLanguage();
     const [replyingTo, setReplyingTo] = useState(null);
 
     const { data, setData, post, processing, reset, errors } = useForm({ body: '', parent_id: null });
@@ -139,7 +141,7 @@ export default function CourseFileDiscussion({ courseFile, comments }) {
                         href={courseFile.files_url}
                         className="text-sm text-gray-500 hover:text-gray-700"
                     >
-                        ← Course Files
+                        ← {t('nav_course_files_teacher')}
                     </Link>
                     <div>
                         <div className="flex items-center gap-2">
@@ -149,7 +151,7 @@ export default function CourseFileDiscussion({ courseFile, comments }) {
                             <h2 className="text-xl font-semibold text-gray-800">{courseFile.title}</h2>
                         </div>
                         <p className="text-sm text-gray-500">
-                            {courseFile.module.name} ({courseFile.module.code}) · Student Discussion
+                            {courseFile.module.name} ({courseFile.module.code}) · {t('student_discussion')}
                         </p>
                     </div>
                 </div>
@@ -166,8 +168,7 @@ export default function CourseFileDiscussion({ courseFile, comments }) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <p className="text-sm text-indigo-700">
-                            You can <strong>reply</strong> to any student comment. Your replies are highlighted and labeled <strong>Teacher</strong>.
-                            You can also <strong>delete</strong> any inappropriate comment.
+                            {t('discussion_hint_teacher')}
                         </p>
                     </div>
 
@@ -185,7 +186,7 @@ export default function CourseFileDiscussion({ courseFile, comments }) {
                             <svg className="mx-auto mb-3 h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
-                            <p className="text-sm text-gray-400">No student comments yet.</p>
+                            <p className="text-sm text-gray-400">{t('no_comments_yet')}</p>
                         </div>
                     )}
 
@@ -197,6 +198,7 @@ export default function CourseFileDiscussion({ courseFile, comments }) {
                                     comment={comment}
                                     onReply={(c) => setReplyingTo(replyingTo?.id === c.id ? null : c)}
                                     storeUrl={courseFile.store_url}
+                                    t={t}
                                 />
 
                                 {comment.replies.map((reply) => (
@@ -205,6 +207,7 @@ export default function CourseFileDiscussion({ courseFile, comments }) {
                                         comment={reply}
                                         storeUrl={courseFile.store_url}
                                         isReply
+                                        t={t}
                                     />
                                 ))}
 
@@ -213,6 +216,7 @@ export default function CourseFileDiscussion({ courseFile, comments }) {
                                         parentComment={comment}
                                         storeUrl={courseFile.store_url}
                                         onCancel={() => setReplyingTo(null)}
+                                        t={t}
                                     />
                                 )}
                             </div>
@@ -221,12 +225,12 @@ export default function CourseFileDiscussion({ courseFile, comments }) {
 
                     {/* Teacher can also post a top-level comment/announcement */}
                     <div className="mt-8 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-                        <h4 className="mb-3 text-sm font-semibold text-gray-700">Post an announcement or comment</h4>
+                        <h4 className="mb-3 text-sm font-semibold text-gray-700">{t('post_announcement')}</h4>
                         <form onSubmit={submitComment} className="space-y-3">
                             <textarea
                                 value={data.body}
                                 onChange={(e) => setData('body', e.target.value)}
-                                placeholder="Share an update, clarification, or announcement for all students…"
+                                placeholder={t('post_placeholder')}
                                 rows={3}
                                 className="block w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 resize-none"
                             />
@@ -237,7 +241,7 @@ export default function CourseFileDiscussion({ courseFile, comments }) {
                                     disabled={processing || !data.body.trim()}
                                     className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                                 >
-                                    {processing ? 'Posting…' : 'Post'}
+                                    {processing ? t('posting_label') : t('post_btn')}
                                 </button>
                             </div>
                         </form>

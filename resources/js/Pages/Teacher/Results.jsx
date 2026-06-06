@@ -1,6 +1,7 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function gradeColor(v) {
     if (v === null || v === undefined || v === '') return 'text-gray-400';
@@ -37,6 +38,7 @@ function StatBadge({ label, value, color = 'gray' }) {
 }
 
 export default function Results({ modules }) {
+    const { t } = useLanguage();
     const [selectedId, setSelectedId]           = useState(modules[0]?.id ?? null);
     const [grades, setGrades]                   = useState(() => modules[0] ? buildGrades(modules[0]) : {});
     const [notes, setNotes]                     = useState(() => modules[0] ? buildNotes(modules[0]) : {});
@@ -109,12 +111,12 @@ export default function Results({ modules }) {
 
     if (!modules.length) {
         return (
-            <TeacherLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Results</h2>}>
-                <Head title="Results" />
+            <TeacherLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('nav_results_teacher')}</h2>}>
+                <Head title={t('nav_results_teacher')} />
                 <div className="py-12">
                     <div className="mx-auto max-w-5xl px-4">
                         <div className="rounded-xl bg-white p-10 text-center text-sm text-gray-400 shadow-sm">
-                            No modules assigned to you yet. Contact your administrator.
+                            {t('no_modules_teacher')}
                         </div>
                     </div>
                 </div>
@@ -125,8 +127,8 @@ export default function Results({ modules }) {
     const stats = module ? getStats(module) : null;
 
     return (
-        <TeacherLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Results Management</h2>}>
-            <Head title="Results" />
+        <TeacherLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('results_management')}</h2>}>
+            <Head title={t('nav_results_teacher')} />
 
             <div className="py-8">
                 <div className="mx-auto max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
@@ -167,7 +169,7 @@ export default function Results({ modules }) {
                                             <span className="ms-2 font-mono text-sm text-gray-400">({module.code})</span>
                                         </p>
                                         <p className="mt-0.5 text-xs text-gray-400">
-                                            {module.semester_name} · Coeff. {module.coefficient} · {module.students.length} students
+                                            {module.semester_name} · Coeff. {module.coefficient} · {module.students.length} {t('students_label')}
                                         </p>
                                     </div>
 
@@ -175,9 +177,9 @@ export default function Results({ modules }) {
                                         {/* Stats */}
                                         {stats && (
                                             <div className="flex gap-2">
-                                                <StatBadge label="Graded" value={`${stats.graded}/${stats.total}`} color="indigo" />
-                                                {stats.avgGrade && <StatBadge label="Class avg" value={`${stats.avgGrade}/20`} color={parseFloat(stats.avgGrade) >= 10 ? 'green' : 'amber'} />}
-                                                {stats.graded > 0 && <StatBadge label="Passing" value={`${stats.passing}/${stats.graded}`} color="green" />}
+                                                <StatBadge label={t('graded_label')} value={`${stats.graded}/${stats.total}`} color="indigo" />
+                                                {stats.avgGrade && <StatBadge label={t('class_avg')} value={`${stats.avgGrade}/20`} color={parseFloat(stats.avgGrade) >= 10 ? 'green' : 'amber'} />}
+                                                {stats.graded > 0 && <StatBadge label={t('passing_label')} value={`${stats.passing}/${stats.graded}`} color="green" />}
                                             </div>
                                         )}
 
@@ -187,20 +189,20 @@ export default function Results({ modules }) {
                                                 onClick={() => setPanel('grades')}
                                                 className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${panel === 'grades' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700'}`}
                                             >
-                                                Grades
+                                                {t('panel_grades')}
                                             </button>
                                             <button
                                                 onClick={() => setPanel('notes')}
                                                 className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${panel === 'notes' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700'}`}
                                             >
-                                                Notes
+                                                {t('panel_notes')}
                                             </button>
                                         </div>
 
                                         {/* Publication badge */}
                                         {module.is_published ? (
                                             <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                                                ✓ Published
+                                                ✓ {t('published_badge')}
                                                 {module.published_at && (
                                                     <span className="text-emerald-500 font-normal">
                                                         · {new Date(module.published_at).toLocaleDateString('en-GB')}
@@ -209,7 +211,7 @@ export default function Results({ modules }) {
                                             </span>
                                         ) : (
                                             <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                                                Draft
+                                                {t('draft_label')}
                                             </span>
                                         )}
                                     </div>
@@ -218,7 +220,7 @@ export default function Results({ modules }) {
 
                             {module.students.length === 0 ? (
                                 <div className="p-10 text-center text-sm text-gray-400">
-                                    No students enrolled in this module.
+                                    {t('no_students')}
                                 </div>
                             ) : (
                                 <>
@@ -226,7 +228,7 @@ export default function Results({ modules }) {
                                     {panel === 'notes' && (
                                         <div className="divide-y divide-gray-50">
                                             <div className="bg-indigo-50 px-6 py-3 text-xs text-indigo-600">
-                                                Private notes for each student — visible only to you.
+                                                {t('private_notes_hint')}
                                             </div>
                                             {module.students.map((s) => (
                                                 <div key={s.id} className="flex items-start gap-4 px-6 py-4">
@@ -239,7 +241,7 @@ export default function Results({ modules }) {
                                                             value={notes[s.id] ?? ''}
                                                             onChange={(e) => setNotes((prev) => ({ ...prev, [s.id]: e.target.value }))}
                                                             rows={2}
-                                                            placeholder="Add a note…"
+                                                            placeholder={t('add_note_placeholder')}
                                                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-300 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
                                                         />
                                                     </div>
@@ -255,13 +257,13 @@ export default function Results({ modules }) {
                                                 <thead className="bg-gray-50">
                                                     <tr>
                                                         <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                                            Student
+                                                            {t('students_label')}
                                                         </th>
                                                         <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                                            Grade <span className="font-normal text-gray-400">(0–20)</span>
+                                                            {t('grade')} <span className="font-normal text-gray-400">(0–20)</span>
                                                         </th>
                                                         <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                                            Status
+                                                            {t('status')}
                                                         </th>
                                                     </tr>
                                                 </thead>
@@ -309,10 +311,10 @@ export default function Results({ modules }) {
                                                                                 ? 'bg-emerald-100 text-emerald-700'
                                                                                 : 'bg-red-100 text-red-600'
                                                                         }`}>
-                                                                            {num >= 10 ? '✓ Pass' : '✗ Fail'}
+                                                                            {num >= 10 ? t('pass_label') : t('fail_label')}
                                                                         </span>
                                                                     ) : (
-                                                                        <span className="text-xs text-gray-300">Not entered</span>
+                                                                        <span className="text-xs text-gray-300">{t('not_entered')}</span>
                                                                     )}
                                                                 </td>
                                                             </tr>
@@ -332,7 +334,7 @@ export default function Results({ modules }) {
                                                     disabled={saving}
                                                     className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
                                                 >
-                                                    {saving ? 'Saving…' : 'Save Grades'}
+                                                    {saving ? t('loading') : t('save_grades')}
                                                 </button>
 
                                                 <div className="flex items-center gap-2">
@@ -342,16 +344,16 @@ export default function Results({ modules }) {
                                                             onClick={() => setConfirmPublish(true)}
                                                             className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
                                                         >
-                                                            Publish Results
+                                                            {t('publish_results')}
                                                         </button>
                                                     )}
                                                     {!module.is_published && confirmPublish && (
                                                         <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2">
-                                                            <p className="text-xs text-amber-700">Students will be notified. Confirm?</p>
+                                                            <p className="text-xs text-amber-700">{t('confirm_publish_msg')}</p>
                                                             <button onClick={publish} disabled={publishing} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-60">
-                                                                {publishing ? '…' : 'Confirm'}
+                                                                {publishing ? '…' : t('confirm')}
                                                             </button>
-                                                            <button onClick={() => setConfirmPublish(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+                                                            <button onClick={() => setConfirmPublish(false)} className="text-xs text-gray-400 hover:text-gray-600">{t('cancel')}</button>
                                                         </div>
                                                     )}
 
@@ -361,16 +363,16 @@ export default function Results({ modules }) {
                                                             onClick={() => setConfirmUnpublish(true)}
                                                             className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-5 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100"
                                                         >
-                                                            Unpublish
+                                                            {t('unpublish_label')}
                                                         </button>
                                                     )}
                                                     {module.is_published && confirmUnpublish && (
                                                         <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2">
-                                                            <p className="text-xs text-red-700">Grades will be hidden from students. Confirm?</p>
+                                                            <p className="text-xs text-red-700">{t('confirm_unpublish_msg')}</p>
                                                             <button onClick={unpublish} disabled={unpublishing} className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60">
-                                                                {unpublishing ? '…' : 'Confirm'}
+                                                                {unpublishing ? '…' : t('confirm')}
                                                             </button>
-                                                            <button onClick={() => setConfirmUnpublish(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+                                                            <button onClick={() => setConfirmUnpublish(false)} className="text-xs text-gray-400 hover:text-gray-600">{t('cancel')}</button>
                                                         </div>
                                                     )}
 
@@ -380,16 +382,16 @@ export default function Results({ modules }) {
                                                             onClick={() => setConfirmPublish(true)}
                                                             className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
                                                         >
-                                                            Re-publish
+                                                            {t('republish_label')}
                                                         </button>
                                                     )}
                                                     {module.is_published && confirmPublish && (
                                                         <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2">
-                                                            <p className="text-xs text-amber-700">Re-publish with latest grades?</p>
+                                                            <p className="text-xs text-amber-700">{t('confirm_republish_msg')}</p>
                                                             <button onClick={publish} disabled={publishing} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-60">
-                                                                {publishing ? '…' : 'Confirm'}
+                                                                {publishing ? '…' : t('confirm')}
                                                             </button>
-                                                            <button onClick={() => setConfirmPublish(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+                                                            <button onClick={() => setConfirmPublish(false)} className="text-xs text-gray-400 hover:text-gray-600">{t('cancel')}</button>
                                                         </div>
                                                     )}
                                                 </div>
@@ -400,7 +402,7 @@ export default function Results({ modules }) {
                                                 disabled={savingNotes}
                                                 className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
                                             >
-                                                {savingNotes ? 'Saving…' : 'Save Notes'}
+                                                {savingNotes ? t('loading') : t('save_notes_btn')}
                                             </button>
                                         )}
                                     </div>

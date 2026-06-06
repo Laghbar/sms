@@ -1,5 +1,6 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { useState } from 'react';
 
 function RoleCard({ role, label, description, icon, color, selected, onSelect }) {
@@ -33,6 +34,7 @@ function RoleCard({ role, label, description, icon, color, selected, onSelect })
 
 export default function BulkImport({ specializations = [], modules = [] }) {
     const { flash } = usePage().props;
+    const { t } = useLanguage();
     const [selectedRole, setSelectedRole] = useState(null);
     const { data, setData, post, processing, errors, reset, progress } = useForm({
         role: '',
@@ -71,7 +73,7 @@ export default function BulkImport({ specializations = [], modules = [] }) {
         : ['name', 'email', 'password'];
 
     return (
-        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Bulk Import Users</h2>}>
+        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('bulk_import_title')}</h2>}>
             <Head title="Bulk Import" />
 
             <div className="py-12">
@@ -92,20 +94,20 @@ export default function BulkImport({ specializations = [], modules = [] }) {
 
                         {/* Step 1: Select Role */}
                         <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h3 className="mb-1 text-base font-semibold text-gray-900">Step 1 — Select user type</h3>
-                            <p className="mb-4 text-sm text-gray-500">Choose the role for the users you are importing.</p>
+                            <h3 className="mb-1 text-base font-semibold text-gray-900">{t('step1_select_type')}</h3>
+                            <p className="mb-4 text-sm text-gray-500">{t('step1_type_desc')}</p>
 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <RoleCard
-                                    role="teacher" label="Teachers"
-                                    description="Import teaching staff accounts"
+                                    role="teacher" label={t('teachers_label')}
+                                    description={t('import_teachers_desc')}
                                     icon="👩‍🏫" color="blue"
                                     selected={selectedRole === 'teacher'}
                                     onSelect={handleRoleSelect}
                                 />
                                 <RoleCard
-                                    role="student" label="Students"
-                                    description="Import student accounts"
+                                    role="student" label={t('students_count')}
+                                    description={t('import_students_desc')}
                                     icon="🎓" color="green"
                                     selected={selectedRole === 'student'}
                                     onSelect={handleRoleSelect}
@@ -117,15 +119,13 @@ export default function BulkImport({ specializations = [], modules = [] }) {
 
                         {/* Step 2: Upload File */}
                         <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h3 className="mb-1 text-base font-semibold text-gray-900">Step 2 — Upload Excel file</h3>
-                            <p className="mb-4 text-sm text-gray-500">
-                                Accepted formats: <span className="font-medium">.xlsx, .xls, .csv</span>. Max size: 10 MB.
-                            </p>
+                            <h3 className="mb-1 text-base font-semibold text-gray-900">{t('step2_upload_file')}</h3>
+                            <p className="mb-4 text-sm text-gray-500">{t('step2_upload_desc')}</p>
 
                             {/* Expected columns hint */}
                             <div className="mb-4 rounded-lg bg-gray-50 p-4">
                                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                    Expected columns (first row = header)
+                                    {t('expected_columns')}
                                 </p>
                                 <div className="flex flex-wrap gap-2">
                                     {exampleHeaders.map((h) => (
@@ -210,7 +210,7 @@ export default function BulkImport({ specializations = [], modules = [] }) {
                                     <p className="text-sm font-medium text-indigo-700">{data.file.name}</p>
                                 ) : (
                                     <>
-                                        <p className="text-sm font-medium text-gray-700">Click to upload or drag &amp; drop</p>
+                                        <p className="text-sm font-medium text-gray-700">{t('click_upload_drag')}</p>
                                         <p className="text-xs text-gray-400">XLSX, XLS, CSV</p>
                                     </>
                                 )}
@@ -241,7 +241,7 @@ export default function BulkImport({ specializations = [], modules = [] }) {
                             disabled={processing || !selectedRole || !data.file}
                             className="w-full rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            {processing ? 'Importing…' : 'Import Users'}
+                            {processing ? t('importing_label') : t('import_users_btn')}
                         </button>
                     </form>
                 </div>

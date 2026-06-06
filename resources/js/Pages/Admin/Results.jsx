@@ -1,8 +1,9 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { useState } from 'react';
 
-function SpecializationSelector({ specializations, selected, onChange }) {
+function SpecializationSelector({ specializations, selected, onChange, t }) {
     return (
         <div className="flex flex-wrap items-center gap-2">
             <button
@@ -13,7 +14,7 @@ function SpecializationSelector({ specializations, selected, onChange }) {
                         : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600'
                 }`}
             >
-                All
+                {t('all')}
             </button>
             {specializations.map((s) => (
                 <button
@@ -55,18 +56,18 @@ function GradeInput({ value, onChange }) {
     );
 }
 
-function StatusDot({ isPublished }) {
+function StatusDot({ isPublished, t }) {
     return (
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
             isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-600'
         }`}>
             <span className={`h-1.5 w-1.5 rounded-full ${isPublished ? 'bg-emerald-500' : 'bg-amber-400'}`}></span>
-            {isPublished ? 'Published' : 'Draft'}
+            {isPublished ? t('published_badge') : t('draft_label')}
         </span>
     );
 }
 
-function ModuleCard({ module }) {
+function ModuleCard({ module, t }) {
     const [expanded, setExpanded]   = useState(false);
     const [grades, setGrades]       = useState(() => {
         const init = {};
@@ -134,10 +135,10 @@ function ModuleCard({ module }) {
                         )}
                     </div>
                     <p className="mt-0.5 text-xs text-gray-400">
-                        Teacher: <span className="font-medium text-gray-600">{module.teacher_name}</span>
+                        {t('teacher')}: <span className="font-medium text-gray-600">{module.teacher_name}</span>
                         {module.avg_grade !== null && (
                             <span className="ms-2">
-                                · Class avg:
+                                · {t('class_avg')}:
                                 <span className={`ms-1 font-semibold ${module.avg_grade >= 10 ? 'text-emerald-600' : 'text-red-500'}`}>
                                     {module.avg_grade}/20
                                 </span>
@@ -149,11 +150,11 @@ function ModuleCard({ module }) {
                 <div className="flex items-center gap-2 flex-wrap">
                     {/* Progress */}
                     <div className="text-center">
-                        <p className="text-[10px] font-semibold uppercase text-gray-400">Graded</p>
+                        <p className="text-[10px] font-semibold uppercase text-gray-400">{t('graded_label')}</p>
                         <p className="text-sm font-bold text-gray-700">{gradedCount}<span className="font-normal text-gray-400">/{totalCount}</span></p>
                     </div>
 
-                    <StatusDot isPublished={module.is_published} />
+                    <StatusDot isPublished={module.is_published} t={t} />
 
                     {/* Action buttons */}
                     {confirmAction === null && (
@@ -163,7 +164,7 @@ function ModuleCard({ module }) {
                                     onClick={() => setConfirmAction('publish')}
                                     className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
                                 >
-                                    Publish
+                                    {t('publish_results')}
                                 </button>
                             ) : (
                                 <>
@@ -171,13 +172,13 @@ function ModuleCard({ module }) {
                                         onClick={() => setConfirmAction('publish')}
                                         className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
                                     >
-                                        Re-publish
+                                        {t('republish_label')}
                                     </button>
                                     <button
                                         onClick={() => setConfirmAction('unpublish')}
                                         className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100"
                                     >
-                                        Unpublish
+                                        {t('unpublish_label')}
                                     </button>
                                 </>
                             )}
@@ -187,22 +188,22 @@ function ModuleCard({ module }) {
                     {/* Confirm publish */}
                     {confirmAction === 'publish' && (
                         <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5">
-                            <span className="text-xs text-amber-700">Notify students?</span>
+                            <span className="text-xs text-amber-700">{t('notify_students_confirm')}</span>
                             <button onClick={doPublish} disabled={publishing} className="rounded bg-emerald-600 px-2 py-1 text-xs text-white hover:bg-emerald-700 disabled:opacity-60">
-                                {publishing ? '…' : 'Yes'}
+                                {publishing ? '…' : t('yes')}
                             </button>
-                            <button onClick={() => setConfirmAction(null)} className="text-xs text-gray-400 hover:text-gray-600">No</button>
+                            <button onClick={() => setConfirmAction(null)} className="text-xs text-gray-400 hover:text-gray-600">{t('no')}</button>
                         </div>
                     )}
 
                     {/* Confirm unpublish */}
                     {confirmAction === 'unpublish' && (
                         <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5">
-                            <span className="text-xs text-red-700">Hide from students?</span>
+                            <span className="text-xs text-red-700">{t('hide_from_students_confirm')}</span>
                             <button onClick={doUnpublish} disabled={publishing} className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-60">
-                                {publishing ? '…' : 'Yes'}
+                                {publishing ? '…' : t('yes')}
                             </button>
-                            <button onClick={() => setConfirmAction(null)} className="text-xs text-gray-400 hover:text-gray-600">No</button>
+                            <button onClick={() => setConfirmAction(null)} className="text-xs text-gray-400 hover:text-gray-600">{t('no')}</button>
                         </div>
                     )}
 
@@ -211,7 +212,7 @@ function ModuleCard({ module }) {
                         onClick={() => setExpanded((v) => !v)}
                         className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
                     >
-                        {expanded ? 'Hide Grades ▲' : 'Edit Grades ▼'}
+                        {expanded ? `${t('hide_sessions')} ▲` : `${t('edit')} ${t('col_grades')} ▼`}
                     </button>
                 </div>
             </div>
@@ -224,10 +225,10 @@ function ModuleCard({ module }) {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">#</th>
-                                    <th className="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Student</th>
-                                    <th className="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">Grade (0–20)</th>
-                                    <th className="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">Rank</th>
-                                    <th className="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">Pass/Fail</th>
+                                    <th className="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">{t('student')}</th>
+                                    <th className="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">{t('col_grades')} (0–20)</th>
+                                    <th className="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">{t('rank_col')}</th>
+                                    <th className="px-5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">{t('pass_fail_col')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -258,7 +259,7 @@ function ModuleCard({ module }) {
                                                     <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                                                         num >= 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
                                                     }`}>
-                                                        {num >= 10 ? 'Pass' : 'Fail'}
+                                                        {num >= 10 ? t('pass_label') : t('fail_label')}
                                                     </span>
                                                 ) : (
                                                     <span className="text-xs text-gray-300">—</span>
@@ -276,7 +277,7 @@ function ModuleCard({ module }) {
                             disabled={saving}
                             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
                         >
-                            {saving ? 'Saving…' : 'Save Grades'}
+                            {saving ? t('saving_label') : t('save_grades')}
                         </button>
                     </div>
                 </>
@@ -286,6 +287,7 @@ function ModuleCard({ module }) {
 }
 
 export default function Results({ modules, class_ranking, specializations = [], filters = {} }) {
+    const { t } = useLanguage();
     const [rankingExpanded, setRankingExpanded] = useState(false);
 
     const selectedSpec = filters.specialization_id ?? '';
@@ -304,7 +306,7 @@ export default function Results({ modules, class_ranking, specializations = [], 
     const selectedSpecName = specializations.find((s) => String(s.id) === String(selectedSpec))?.name ?? null;
 
     return (
-        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Results Management</h2>}>
+        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('nav_academic_results')}</h2>}>
             <Head title="Results" />
 
             <div className="py-8">
@@ -314,12 +316,13 @@ export default function Results({ modules, class_ranking, specializations = [], 
                     {specializations.length > 0 && (
                         <div className="rounded-xl bg-white px-5 py-4 shadow-sm">
                             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                                Filter by Specialization
+                                {t('specialization')}
                             </p>
                             <SpecializationSelector
                                 specializations={specializations}
                                 selected={selectedSpec}
                                 onChange={handleSpecChange}
+                                t={t}
                             />
                         </div>
                     )}
@@ -327,10 +330,10 @@ export default function Results({ modules, class_ranking, specializations = [], 
                     {/* ── Summary stats ── */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         {[
-                            { label: 'Total Modules', value: totalModules, color: 'bg-indigo-50 text-indigo-800' },
-                            { label: 'Published',     value: publishedCount, color: 'bg-emerald-50 text-emerald-800' },
-                            { label: 'Pending',       value: totalModules - publishedCount, color: 'bg-amber-50 text-amber-800' },
-                            { label: 'Students Ranked', value: totalStudents, color: 'bg-gray-50 text-gray-700' },
+                            { label: `Total ${t('nav_modules')}`, value: totalModules, color: 'bg-indigo-50 text-indigo-800' },
+                            { label: t('published_badge'),     value: publishedCount, color: 'bg-emerald-50 text-emerald-800' },
+                            { label: t('status_pending'),       value: totalModules - publishedCount, color: 'bg-amber-50 text-amber-800' },
+                            { label: `${t('students_count')} Ranked`, value: totalStudents, color: 'bg-gray-50 text-gray-700' },
                         ].map((s) => (
                             <div key={s.label} className={`rounded-xl p-4 ${s.color}`}>
                                 <p className="text-xs font-semibold uppercase tracking-wide opacity-60">{s.label}</p>
@@ -342,7 +345,7 @@ export default function Results({ modules, class_ranking, specializations = [], 
                     {/* ── Module cards ── */}
                     <div>
                         <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-400">
-                            Modules
+                            {t('nav_modules')}
                             {selectedSpecName && (
                                 <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 normal-case tracking-normal">
                                     {selectedSpecName}
@@ -352,10 +355,10 @@ export default function Results({ modules, class_ranking, specializations = [], 
                         <div className="space-y-4">
                             {modules.length === 0 ? (
                                 <div className="rounded-xl bg-white p-10 text-center text-sm text-gray-400 shadow-sm">
-                                    No modules found.
+                                    {t('no_data')}
                                 </div>
                             ) : (
-                                modules.map((module) => <ModuleCard key={module.id} module={module} />)
+                                modules.map((module) => <ModuleCard key={module.id} module={module} t={t} />)
                             )}
                         </div>
                     </div>
@@ -368,9 +371,9 @@ export default function Results({ modules, class_ranking, specializations = [], 
                                 className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-gray-50"
                             >
                                 <div>
-                                    <p className="font-semibold text-gray-900">Final Class Ranking</p>
+                                    <p className="font-semibold text-gray-900">{t('final_ranking')}</p>
                                     <p className="mt-0.5 text-xs text-gray-400">
-                                        {class_ranking.length} students · based on published modules
+                                        {class_ranking.length} {t('ranked_by_published')}
                                     </p>
                                 </div>
                                 <span className="text-gray-400">{rankingExpanded ? '▲' : '▼'}</span>
