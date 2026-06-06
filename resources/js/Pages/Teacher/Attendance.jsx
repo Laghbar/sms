@@ -1,5 +1,6 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head, Link } from '@inertiajs/react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function StatBadge({ label, value, color }) {
     return (
@@ -11,11 +12,12 @@ function StatBadge({ label, value, color }) {
 }
 
 export default function Attendance({ modules }) {
+    const { t } = useLanguage();
     const grouped = [...new Set(modules.map(m => m.semester))].sort((a, b) => a - b);
 
     return (
-        <TeacherLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Attendance</h2>}>
-            <Head title="Attendance" />
+        <TeacherLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('nav_attendance')}</h2>}>
+            <Head title={t('nav_attendance')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
@@ -41,10 +43,10 @@ export default function Attendance({ modules }) {
 
                                             {/* Stats row */}
                                             <div className="flex gap-2 px-5 py-4">
-                                                <StatBadge label="Students"  value={mod.students_count} color="bg-indigo-50 text-indigo-700" />
-                                                <StatBadge label="Sessions"  value={mod.sessions_count} color="bg-emerald-50 text-emerald-700" />
+                                                <StatBadge label={t('students_label')}    value={mod.students_count} color="bg-indigo-50 text-indigo-700" />
+                                                <StatBadge label={t('sessions_recorded')} value={mod.sessions_count} color="bg-emerald-50 text-emerald-700" />
                                                 <div className="flex-1 rounded-lg bg-gray-50 px-3 py-1.5">
-                                                    <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Last session</p>
+                                                    <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">{t('last_session')}</p>
                                                     <p className="mt-0.5 text-xs font-semibold text-gray-600">
                                                         {mod.last_session
                                                             ? new Date(mod.last_session).toLocaleDateString('en-GB', { day:'2-digit', month:'short' })
@@ -62,7 +64,7 @@ export default function Attendance({ modules }) {
                                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                                                     </svg>
-                                                    Take Attendance
+                                                    {t('take_attendance')}
                                                 </Link>
                                             </div>
                                         </div>

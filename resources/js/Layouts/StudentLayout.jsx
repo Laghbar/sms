@@ -3,6 +3,7 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function ChevronDown({ className = '' }) {
     return (
@@ -79,6 +80,7 @@ function MobileSection({ title, items }) {
 export default function StudentLayout({ header, children }) {
     const { auth: { user }, new_events_count } = usePage().props;
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { t, toggle, lang } = useLanguage();
     const r = (name) => route().current(name);
 
     const academicActive = r('student.results') || r('student.attendance.*') || r('student.transcript');
@@ -86,31 +88,20 @@ export default function StudentLayout({ header, children }) {
     const servicesActive  = r('student.stage-folder.*') || r('student.events.*');
 
     const academicItems = [
-        { href: route('student.results'),          icon: '📊', label: 'Résultats',    desc: 'Notes et classement',         active: r('student.results') },
-        { href: route('student.attendance.index'), icon: '📋', label: 'Assiduité',    desc: 'Présences par module',        active: r('student.attendance.*') },
-        { href: route('student.transcript'),       icon: '📄', label: 'Mon Relevé',   desc: 'Relevé de notes officiel',    active: r('student.transcript') },
+        { href: route('student.results'),          icon: '📊', label: t('nav_results'),      desc: t('desc_results'),      active: r('student.results') },
+        { href: route('student.attendance.index'), icon: '📋', label: t('nav_attendance'),   desc: t('desc_attendance'),   active: r('student.attendance.*') },
+        { href: route('student.transcript'),       icon: '📄', label: t('nav_transcript'),   desc: t('desc_transcript'),   active: r('student.transcript') },
     ];
 
     const resourcesItems = [
-        { href: route('student.course-files.index'), icon: '📁', label: 'Fichiers de cours', desc: 'Supports et TPs',            active: r('student.course-files.*') },
-        { href: route('student.schedule'),           icon: '🗓️', label: 'Emploi du Temps',  desc: 'Planning des séances',        active: r('student.schedule') },
+        { href: route('student.course-files.index'), icon: '📁', label: t('nav_course_files'), desc: t('desc_course_files'), active: r('student.course-files.*') },
+        { href: route('student.schedule'),           icon: '🗓️', label: t('nav_schedule'),      desc: t('desc_schedule'),     active: r('student.schedule') },
     ];
 
     const servicesItems = [
-        { href: route('student.stage-folder.index'), icon: '🗂️', label: 'Dossier de Stage', desc: 'Demande et suivi',            active: r('student.stage-folder.*') },
-        { href: route('student.events.index'),       icon: '🎉', label: 'Événements',        desc: 'Campus & activités',          active: r('student.events.*') },
+        { href: route('student.stage-folder.index'), icon: '🗂️', label: t('nav_stage_folder'), desc: t('desc_stage_folder'), active: r('student.stage-folder.*') },
+        { href: route('student.events.index'),       icon: '🎉', label: t('nav_events'),         desc: t('desc_events'),       active: r('student.events.*') },
     ];
-
-    const eventsLabel = (
-        <span className="relative">
-            Événements
-            {new_events_count > 0 && (
-                <span className="absolute -right-4 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                    {new_events_count > 9 ? '9+' : new_events_count}
-                </span>
-            )}
-        </span>
-    );
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -127,16 +118,20 @@ export default function StudentLayout({ header, children }) {
 
                             <div className="hidden items-center gap-6 sm:flex">
                                 <NavItem href={route('student.dashboard')} active={r('student.dashboard')}>
-                                    Dashboard
+                                    {t('nav_dashboard')}
                                 </NavItem>
-                                <NavGroup label="Académique" active={academicActive}  items={academicItems} />
-                                <NavGroup label="Ressources" active={resourcesActive} items={resourcesItems} />
-                                <NavGroup label="Services"   active={servicesActive}  items={servicesItems} />
+                                <NavGroup label={t('nav_academic')}  active={academicActive}  items={academicItems} />
+                                <NavGroup label={t('nav_resources')} active={resourcesActive} items={resourcesItems} />
+                                <NavGroup label={t('nav_services')}  active={servicesActive}  items={servicesItems} />
                             </div>
                         </div>
 
                         {/* Right */}
                         <div className="hidden sm:flex sm:items-center sm:gap-3">
+                            <button onClick={toggle}
+                                className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-50 transition">
+                                {t('lang_toggle')}
+                            </button>
                             <NotificationBell />
                             <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800">Student</span>
                             <Dropdown>
@@ -147,8 +142,8 @@ export default function StudentLayout({ header, children }) {
                                     </button>
                                 </Dropdown.Trigger>
                                 <Dropdown.Content align="right">
-                                    <Dropdown.Link href={route('profile.edit')}>Profile</Dropdown.Link>
-                                    <Dropdown.Link href={route('logout')} method="post" as="button">Log Out</Dropdown.Link>
+                                    <Dropdown.Link href={route('profile.edit')}>{t('nav_profile')}</Dropdown.Link>
+                                    <Dropdown.Link href={route('logout')} method="post" as="button">{t('nav_logout')}</Dropdown.Link>
                                 </Dropdown.Content>
                             </Dropdown>
                         </div>
@@ -176,23 +171,23 @@ export default function StudentLayout({ header, children }) {
                                         ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                                         : 'border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                                 }`}>
-                                🏠 Dashboard
+                                🏠 {t('nav_dashboard')}
                             </Link>
 
-                            <MobileSection title="Académique" items={[
-                                { href: route('student.results'),          icon: '📊', label: 'Résultats',          active: r('student.results') },
-                                { href: route('student.attendance.index'), icon: '📋', label: 'Assiduité',          active: r('student.attendance.*') },
-                                { href: route('student.transcript'),       icon: '📄', label: 'Mon Relevé',         active: r('student.transcript') },
+                            <MobileSection title={t('nav_academic')} items={[
+                                { href: route('student.results'),          icon: '📊', label: t('nav_results'),      active: r('student.results') },
+                                { href: route('student.attendance.index'), icon: '📋', label: t('nav_attendance'),   active: r('student.attendance.*') },
+                                { href: route('student.transcript'),       icon: '📄', label: t('nav_transcript'),   active: r('student.transcript') },
                             ]} />
 
-                            <MobileSection title="Ressources" items={[
-                                { href: route('student.course-files.index'), icon: '📁', label: 'Fichiers de cours', active: r('student.course-files.*') },
-                                { href: route('student.schedule'),           icon: '🗓️', label: 'Emploi du Temps',   active: r('student.schedule') },
+                            <MobileSection title={t('nav_resources')} items={[
+                                { href: route('student.course-files.index'), icon: '📁', label: t('nav_course_files'), active: r('student.course-files.*') },
+                                { href: route('student.schedule'),           icon: '🗓️', label: t('nav_schedule'),      active: r('student.schedule') },
                             ]} />
 
-                            <MobileSection title="Services" items={[
-                                { href: route('student.stage-folder.index'), icon: '🗂️', label: 'Dossier de Stage', active: r('student.stage-folder.*') },
-                                { href: route('student.events.index'),       icon: '🎉', label: 'Événements',
+                            <MobileSection title={t('nav_services')} items={[
+                                { href: route('student.stage-folder.index'), icon: '🗂️', label: t('nav_stage_folder'), active: r('student.stage-folder.*') },
+                                { href: route('student.events.index'),       icon: '🎉', label: t('nav_events'),
                                   badge: new_events_count > 0
                                     ? <span className="ml-auto rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{new_events_count > 9 ? '9+' : new_events_count}</span>
                                     : null,
@@ -201,17 +196,23 @@ export default function StudentLayout({ header, children }) {
                         </div>
 
                         <div className="border-t border-gray-200 pb-1 pt-3">
-                            <div className="px-4 pb-2">
-                                <p className="text-sm font-medium text-gray-800">{user.name}</p>
-                                <p className="text-xs text-gray-500">{user.email}</p>
+                            <div className="px-4 pb-2 flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-800">{user.name}</p>
+                                    <p className="text-xs text-gray-500">{user.email}</p>
+                                </div>
+                                <button onClick={toggle}
+                                    className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-50">
+                                    {t('lang_toggle')}
+                                </button>
                             </div>
                             <Link href={route('profile.edit')}
                                 className="flex items-center gap-3 border-l-4 border-transparent py-2.5 pl-4 pr-6 text-sm font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50">
-                                👤 Profile
+                                👤 {t('nav_profile')}
                             </Link>
                             <Link href={route('logout')} method="post" as="button"
                                 className="flex w-full items-center gap-3 border-l-4 border-transparent py-2.5 pl-4 pr-6 text-sm font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50">
-                                🚪 Log Out
+                                🚪 {t('nav_logout')}
                             </Link>
                         </div>
                     </div>

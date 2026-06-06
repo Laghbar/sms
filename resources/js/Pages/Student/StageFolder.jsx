@@ -1,17 +1,27 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
-const STATUS = {
-    pending:    { label: 'En attente',   color: 'bg-amber-100 text-amber-700',     dot: 'bg-amber-400',    step: 0 },
-    processing: { label: 'En préparation', color: 'bg-blue-100 text-blue-700',     dot: 'bg-blue-500',     step: 1 },
-    ready:      { label: 'Prêt',           color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500', step: 2 },
-};
+function InfoRow({ label, value, missing }) {
+    return (
+        <div className="flex gap-2 text-sm border-b border-gray-50 py-1.5">
+            <span className="w-36 shrink-0 font-semibold text-gray-500">{label}</span>
+            <span className={value ? 'text-gray-800' : 'italic text-gray-300'}>{value || missing || '—'}</span>
+        </div>
+    );
+}
 
 function Timeline({ status }) {
+    const { t } = useLanguage();
+    const STATUS = {
+        pending:    { dot: 'bg-amber-400',    step: 0 },
+        processing: { dot: 'bg-blue-500',     step: 1 },
+        ready:      { dot: 'bg-emerald-500',  step: 2 },
+    };
     const steps = [
-        { key: 'pending',    label: 'Demande envoyée' },
-        { key: 'processing', label: 'En préparation' },
-        { key: 'ready',      label: 'Prêt à télécharger' },
+        { key: 'pending',    label: t('timeline_submitted') },
+        { key: 'processing', label: t('timeline_processing') },
+        { key: 'ready',      label: t('timeline_ready') },
     ];
     const current = STATUS[status]?.step ?? 0;
     return (
@@ -38,17 +48,9 @@ function Timeline({ status }) {
     );
 }
 
-function InfoRow({ label, value, missing }) {
-    return (
-        <div className="flex gap-2 text-sm border-b border-gray-50 py-1.5">
-            <span className="w-36 shrink-0 font-semibold text-gray-500">{label}</span>
-            <span className={value ? 'text-gray-800' : 'italic text-gray-300'}>{value || missing || '—'}</span>
-        </div>
-    );
-}
-
 /* ── Company update form ─────────────────────────────────────────────── */
 function CompanyForm({ req }) {
+    const { t } = useLanguage();
     const { data, setData, patch, processing, errors } = useForm({
         company_name:    req.company_name    ?? '',
         company_address: req.company_address ?? '',
@@ -69,36 +71,34 @@ function CompanyForm({ req }) {
                 <span className="text-base">🏢</span>
                 <div>
                     <p className="text-sm font-semibold text-indigo-800">
-                        {hasCompany ? 'Informations de l\'entreprise' : 'Vous avez trouvé votre entreprise ?'}
+                        {hasCompany ? t('company_info') : t('company_found')}
                     </p>
                     <p className="text-xs text-indigo-500">
-                        {hasCompany
-                            ? 'Vous pouvez mettre à jour ces informations à tout moment.'
-                            : 'Ajoutez les coordonnées de votre entreprise une fois que vous l\'avez sécurisée.'}
+                        {hasCompany ? t('company_update_hint2') : t('company_update_hint')}
                     </p>
                 </div>
             </div>
 
             {hasCompany && (
                 <div className="rounded-lg bg-white px-3 py-2 text-sm space-y-0.5">
-                    <InfoRow label="Entreprise" value={req.company_name} />
-                    <InfoRow label="Adresse"    value={req.company_address} />
+                    <InfoRow label={t('company_name')}    value={req.company_name} />
+                    <InfoRow label={t('company_address')} value={req.company_address} />
                 </div>
             )}
 
             <form onSubmit={submit} className="space-y-2">
                 <input type="text" value={data.company_name}
                     onChange={e => setData('company_name', e.target.value)}
-                    placeholder="Nom de l'entreprise"
+                    placeholder={t('company_name')}
                     className={F} />
                 <input type="text" value={data.company_address}
                     onChange={e => setData('company_address', e.target.value)}
-                    placeholder="Adresse de l'entreprise"
+                    placeholder={t('company_address')}
                     className={F} />
                 <div className="flex justify-end">
                     <button type="submit" disabled={processing}
                         className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
-                        {processing ? 'Enregistrement…' : hasCompany ? 'Mettre à jour' : 'Ajouter l\'entreprise'}
+                        {processing ? t('submitting') : hasCompany ? t('update_company') : t('add_company')}
                     </button>
                 </div>
             </form>
@@ -108,6 +108,7 @@ function CompanyForm({ req }) {
 
 /* ── Page ────────────────────────────────────────────────────────────── */
 export default function StageFolder({ student_info, folderRequest }) {
+    const { t } = useLanguage();
     const { flash } = usePage().props;
     const F = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400';
 
@@ -124,12 +125,12 @@ export default function StageFolder({ student_info, folderRequest }) {
     }
 
     function cancel() {
-        if (!window.confirm('Annuler votre demande ?')) return;
+        if (!window.confirm(t('cancel_request') + '?')) return;
         router.delete(route('student.stage-folder.cancel', folderRequest.id));
     }
 
     return (
-        <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Dossier de Stage</h2>}>
+        <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('stage_folder_title')}</h2>}>
             <Head title="Dossier de Stage" />
 
             <div className="py-10">
@@ -147,19 +148,19 @@ export default function StageFolder({ student_info, folderRequest }) {
 
                     {/* Student identity (always visible) */}
                     <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-5 py-4 space-y-1.5">
-                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-400">Vos informations</p>
-                        <InfoRow label="Nom & Prénom" value={student_info.name} />
-                        <InfoRow label="Email"        value={student_info.email} />
-                        <InfoRow label="Filière"      value={student_info.specialization} />
-                        <InfoRow label="Niveau"       value={student_info.semester} />
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-400">{t('your_info')}</p>
+                        <InfoRow label={t('name_surname')}   value={student_info.name} />
+                        <InfoRow label={t('email')}          value={student_info.email} />
+                        <InfoRow label={t('field_of_study')} value={student_info.specialization} />
+                        <InfoRow label={t('level')}          value={student_info.semester} />
                     </div>
 
                     {folderRequest ? (
                         /* ── Existing request ── */
                         <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                             <div className="bg-indigo-600 px-6 py-4">
-                                <p className="text-xs font-semibold uppercase tracking-widest text-indigo-200">Demande #{folderRequest.id} · {folderRequest.created_at}</p>
-                                <p className="mt-0.5 text-base font-bold text-white">Dossier de Stage Technique</p>
+                                <p className="text-xs font-semibold uppercase tracking-widest text-indigo-200">{t('request_number')}{folderRequest.id} · {folderRequest.created_at}</p>
+                                <p className="mt-0.5 text-base font-bold text-white">{t('stage_technical')}</p>
                             </div>
 
                             <div className="space-y-5 px-6 py-5">
@@ -167,25 +168,25 @@ export default function StageFolder({ student_info, folderRequest }) {
 
                                 {/* Step 1 details — what they submitted */}
                                 <div>
-                                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Étape 1 — Informations soumises</p>
+                                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t('step1_label')}</p>
                                     <div className="rounded-lg bg-gray-50 px-4 py-2 space-y-0.5">
-                                        <InfoRow label="Téléphone"   value={folderRequest.phone} />
-                                        <InfoRow label="Début souhaité" value={folderRequest.internship_start} />
-                                        <InfoRow label="Durée"       value={folderRequest.duration_weeks ? `${folderRequest.duration_weeks} semaines` : null} />
-                                        {folderRequest.notes && <InfoRow label="Notes" value={folderRequest.notes} />}
+                                        <InfoRow label={t('phone')}         value={folderRequest.phone} />
+                                        <InfoRow label={t('desired_start')} value={folderRequest.internship_start} />
+                                        <InfoRow label={t('duration_weeks')} value={folderRequest.duration_weeks ? `${folderRequest.duration_weeks} semaines` : null} />
+                                        {folderRequest.notes && <InfoRow label={t('remarks')} value={folderRequest.notes} />}
                                     </div>
                                 </div>
 
                                 {/* Step 2 — company details (editable at any time) */}
                                 <div>
-                                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Étape 2 — Entreprise (une fois trouvée)</p>
+                                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t('step2_label')}</p>
                                     <CompanyForm req={folderRequest} />
                                 </div>
 
                                 {/* Admin note */}
                                 {folderRequest.admin_note && (
                                     <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Note de l'admin</p>
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">{t('admin_note')}</p>
                                         <p className="mt-1 text-sm text-blue-800">{folderRequest.admin_note}</p>
                                     </div>
                                 )}
@@ -198,13 +199,13 @@ export default function StageFolder({ student_info, folderRequest }) {
                                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                             </svg>
-                                            Télécharger mon dossier
+                                            {t('download_folder')}
                                         </a>
                                     )}
                                     {folderRequest.status === 'pending' && (
                                         <button onClick={cancel}
                                             className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50">
-                                            Annuler la demande
+                                            {t('cancel_request')}
                                         </button>
                                     )}
                                 </div>
@@ -214,16 +215,14 @@ export default function StageFolder({ student_info, folderRequest }) {
                         /* ── Initial request form — step 1 only ── */
                         <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                             <div className="border-b border-gray-100 px-6 py-4">
-                                <h3 className="text-base font-semibold text-gray-900">Demander un dossier de stage</h3>
-                                <p className="mt-0.5 text-xs text-gray-400">
-                                    Étape 1 sur 2 — Renseignez vos disponibilités. Vous ajouterez les détails de l'entreprise après avoir sécurisé votre stage.
-                                </p>
+                                <h3 className="text-base font-semibold text-gray-900">{t('request_title')}</h3>
+                                <p className="mt-0.5 text-xs text-gray-400">{t('request_subtitle')}</p>
                             </div>
 
                             <form onSubmit={submit} className="space-y-4 px-6 py-5">
                                 <div>
                                     <label className="mb-1 block text-sm font-medium text-gray-700">
-                                        Téléphone <span className="text-red-500">*</span>
+                                        {t('phone')} <span className="text-red-500">*</span>
                                     </label>
                                     <input type="tel" value={data.phone}
                                         onChange={e => setData('phone', e.target.value)}
@@ -234,7 +233,7 @@ export default function StageFolder({ student_info, folderRequest }) {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="mb-1 block text-sm font-medium text-gray-700">
-                                            Date de début souhaitée <span className="font-normal text-gray-400">(optionnel)</span>
+                                            {t('desired_start')} <span className="font-normal text-gray-400">{t('optional')}</span>
                                         </label>
                                         <input type="date" value={data.internship_start}
                                             onChange={e => setData('internship_start', e.target.value)}
@@ -242,7 +241,7 @@ export default function StageFolder({ student_info, folderRequest }) {
                                     </div>
                                     <div>
                                         <label className="mb-1 block text-sm font-medium text-gray-700">
-                                            Durée (semaines) <span className="font-normal text-gray-400">(optionnel)</span>
+                                            {t('duration_weeks')} <span className="font-normal text-gray-400">{t('optional')}</span>
                                         </label>
                                         <input type="number" min="1" max="52" value={data.duration_weeks}
                                             onChange={e => setData('duration_weeks', e.target.value)}
@@ -252,7 +251,7 @@ export default function StageFolder({ student_info, folderRequest }) {
 
                                 <div>
                                     <label className="mb-1 block text-sm font-medium text-gray-700">
-                                        Remarques <span className="font-normal text-gray-400">(optionnel)</span>
+                                        {t('remarks')} <span className="font-normal text-gray-400">{t('optional')}</span>
                                     </label>
                                     <textarea rows={2} value={data.notes}
                                         onChange={e => setData('notes', e.target.value)}
@@ -260,13 +259,13 @@ export default function StageFolder({ student_info, folderRequest }) {
                                 </div>
 
                                 <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3 text-xs text-indigo-600">
-                                    🏢 <strong>Étape 2 :</strong> Une fois votre entreprise sécurisée, vous pourrez ajouter son nom et son adresse directement depuis cette page.
+                                    {t('step2_hint')}
                                 </div>
 
                                 <div className="flex justify-end pt-1">
                                     <button type="submit" disabled={processing}
                                         className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
-                                        {processing ? 'Envoi…' : 'Envoyer la demande'}
+                                        {processing ? t('submitting') : t('submit_request')}
                                     </button>
                                 </div>
                             </form>

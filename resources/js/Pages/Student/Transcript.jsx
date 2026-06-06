@@ -1,15 +1,6 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head } from '@inertiajs/react';
-
-function mention(avg) {
-    if (avg === null) return { label: '—', color: 'text-gray-400' };
-    if (avg >= 18)   return { label: 'Excellent',  color: 'text-emerald-700' };
-    if (avg >= 16)   return { label: 'Très Bien',  color: 'text-emerald-600' };
-    if (avg >= 14)   return { label: 'Bien',        color: 'text-blue-600' };
-    if (avg >= 12)   return { label: 'Assez Bien',  color: 'text-indigo-600' };
-    if (avg >= 10)   return { label: 'Passable',    color: 'text-amber-600' };
-    return             { label: 'Insuffisant',       color: 'text-red-600' };
-}
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function gradeColor(g) {
     if (g === null) return 'text-gray-400';
@@ -20,6 +11,18 @@ function gradeColor(g) {
 }
 
 export default function Transcript({ student, year, modules, average, attendance }) {
+    const { t } = useLanguage();
+
+    function mention(avg) {
+        if (avg === null) return { label: '—', color: 'text-gray-400' };
+        if (avg >= 18)   return { label: t('mention_excellent'),  color: 'text-emerald-700' };
+        if (avg >= 16)   return { label: t('mention_tres_bien'),  color: 'text-emerald-600' };
+        if (avg >= 14)   return { label: t('mention_bien'),       color: 'text-blue-600' };
+        if (avg >= 12)   return { label: t('mention_assez_bien'), color: 'text-indigo-600' };
+        if (avg >= 10)   return { label: t('mention_passable'),   color: 'text-amber-600' };
+        return             { label: t('mention_insuffisant'),      color: 'text-red-600' };
+    }
+
     const m = mention(average);
     const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
     const publishedModules = modules.filter(r => r.published);
@@ -28,11 +31,11 @@ export default function Transcript({ student, year, modules, average, attendance
     return (
         <StudentLayout header={
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">Mon Relevé de Notes</h2>
+                <h2 className="text-xl font-semibold leading-tight text-gray-800">{t('transcript_title')}</h2>
                 <button
                     onClick={() => allReady && window.print()}
                     disabled={!allReady}
-                    title={!allReady ? 'Toutes les notes doivent être publiées avant de télécharger' : ''}
+                    title={!allReady ? t('grades_not_ready') : ''}
                     className={`no-print inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition ${
                         allReady
                             ? 'bg-emerald-600 hover:bg-emerald-700 cursor-pointer'
@@ -42,7 +45,7 @@ export default function Transcript({ student, year, modules, average, attendance
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.75 19.5m10.56-5.671L17.25 19.5M3 8.25V18a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18V8.25m-18 0V6a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 6v2.25m-18 0h18" />
                     </svg>
-                    Imprimer / Enregistrer PDF
+                    {t('all_grades_ready')}
                 </button>
             </div>
         }>
@@ -82,11 +85,11 @@ export default function Transcript({ student, year, modules, average, attendance
                         {/* Student info grid */}
                         <div className="grid grid-cols-2 gap-x-8 gap-y-3 px-6 py-5">
                             {[
-                                { label: 'Nom & Prénom',  value: student.name },
-                                { label: 'Email',          value: student.email },
-                                { label: 'Filière',        value: student.specialization ?? '—' },
-                                { label: 'Niveau',         value: student.semester ?? '—' },
-                                { label: 'Date d\'édition', value: today },
+                                { label: t('name_surname'),   value: student.name },
+                                { label: t('email'),           value: student.email },
+                                { label: t('field_of_study'),  value: student.specialization ?? '—' },
+                                { label: t('level'),           value: student.semester ?? '—' },
+                                { label: t('edition_date'),    value: today },
                             ].map(row => (
                                 <div key={row.label} className="flex gap-2 text-sm border-b border-gray-50 py-1">
                                     <span className="w-36 shrink-0 font-semibold text-gray-500">{row.label}</span>
@@ -99,7 +102,7 @@ export default function Transcript({ student, year, modules, average, attendance
                     {/* ── Grades table ── */}
                     <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                         <div className="border-b border-gray-100 px-6 py-3 flex items-center justify-between">
-                            <h2 className="text-sm font-semibold text-gray-900">Notes par Module</h2>
+                            <h2 className="text-sm font-semibold text-gray-900">{t('grades_by_module')}</h2>
                             <span className="text-xs text-gray-400">{publishedModules.length} module(s) publiés</span>
                         </div>
 
@@ -107,10 +110,10 @@ export default function Transcript({ student, year, modules, average, attendance
                             <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
                                 <tr>
                                     <th className="px-5 py-3 text-left">Module</th>
-                                    <th className="px-5 py-3 text-left">Enseignant</th>
-                                    <th className="px-5 py-3 text-center">Coeff.</th>
-                                    <th className="px-5 py-3 text-center">Note /20</th>
-                                    <th className="px-5 py-3 text-center">Mention</th>
+                                    <th className="px-5 py-3 text-left">{t('teacher')}</th>
+                                    <th className="px-5 py-3 text-center">{t('coefficient')}</th>
+                                    <th className="px-5 py-3 text-center">{t('grade')} /20</th>
+                                    <th className="px-5 py-3 text-center">{t('mention')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -130,7 +133,7 @@ export default function Transcript({ student, year, modules, average, attendance
                                             {mod.grade !== null
                                                 ? mod.grade.toFixed(2)
                                                 : <span className="text-xs italic text-gray-400">
-                                                    {mod.published ? 'Non noté' : 'En attente'}
+                                                    {mod.published ? 'Not graded' : t('pending_grade')}
                                                   </span>
                                             }
                                         </td>
@@ -145,10 +148,10 @@ export default function Transcript({ student, year, modules, average, attendance
                             <tfoot className="bg-indigo-50">
                                 <tr>
                                     <td colSpan={2} className="px-5 py-3 text-sm font-semibold text-indigo-800">
-                                        Moyenne Générale Pondérée
+                                        {t('weighted_average')}
                                     </td>
                                     <td className="px-5 py-3 text-center text-xs text-indigo-500">
-                                        {modules.filter(m => m.grade !== null).reduce((s, m) => s + m.coefficient, 0)} coeff.
+                                        {modules.filter(mod => mod.grade !== null).reduce((s, mod) => s + mod.coefficient, 0)} coeff.
                                     </td>
                                     <td className="px-5 py-3 text-center text-lg font-bold text-indigo-700">
                                         {average !== null ? average.toFixed(2) : '—'}
@@ -165,15 +168,15 @@ export default function Transcript({ student, year, modules, average, attendance
                     {attendance.total > 0 && (
                         <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                             <div className="border-b border-gray-100 px-6 py-3">
-                                <h2 className="text-sm font-semibold text-gray-900">Résumé de l'Assiduité</h2>
+                                <h2 className="text-sm font-semibold text-gray-900">{t('attendance_summary')}</h2>
                             </div>
                             <div className="grid grid-cols-5 divide-x divide-gray-100 text-center">
                                 {[
-                                    { label: 'Séances',  value: attendance.total,   color: 'text-gray-700' },
-                                    { label: 'Présent',  value: attendance.present,  color: 'text-emerald-600' },
-                                    { label: 'Absent',   value: attendance.absent,   color: 'text-red-600' },
-                                    { label: 'Retard',   value: attendance.late,     color: 'text-amber-600' },
-                                    { label: 'Taux',
+                                    { label: t('total_sessions'),  value: attendance.total,   color: 'text-gray-700' },
+                                    { label: t('present'),         value: attendance.present,  color: 'text-emerald-600' },
+                                    { label: t('absent'),          value: attendance.absent,   color: 'text-red-600' },
+                                    { label: t('late'),            value: attendance.late,     color: 'text-amber-600' },
+                                    { label: t('attendance_rate_col'),
                                       value: attendance.rate !== null ? `${attendance.rate}%` : '—',
                                       color: attendance.rate === null ? 'text-gray-400'
                                            : attendance.rate >= 80 ? 'text-emerald-600'
@@ -194,11 +197,11 @@ export default function Transcript({ student, year, modules, average, attendance
                         <div className="flex justify-between text-sm text-gray-600 px-2">
                             <div className="text-center">
                                 <div className="h-16 border-b border-gray-400 w-40" />
-                                <p className="mt-1 text-xs">Signature de l'étudiant(e)</p>
+                                <p className="mt-1 text-xs">{t('signature_student')}</p>
                             </div>
                             <div className="text-center">
                                 <div className="h-16 border-b border-gray-400 w-40" />
-                                <p className="mt-1 text-xs">Cachet et signature de l'administration</p>
+                                <p className="mt-1 text-xs">{t('signature_admin')}</p>
                             </div>
                         </div>
                     </div>

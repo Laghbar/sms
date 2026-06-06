@@ -1,15 +1,16 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
-
-const STATUS = {
-    present: { label: 'Présent',  bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-    absent:  { label: 'Absent',   bg: 'bg-red-100',     text: 'text-red-700',     dot: 'bg-red-500' },
-    late:    { label: 'Retard',   bg: 'bg-amber-100',   text: 'text-amber-700',   dot: 'bg-amber-400' },
-    excused: { label: 'Excusé',   bg: 'bg-slate-100',   text: 'text-slate-600',   dot: 'bg-slate-400' },
-};
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function StatusBadge({ status }) {
+    const { t } = useLanguage();
+    const STATUS = {
+        present: { label: t('present'),  bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+        absent:  { label: t('absent'),   bg: 'bg-red-100',     text: 'text-red-700',     dot: 'bg-red-500' },
+        late:    { label: t('late'),     bg: 'bg-amber-100',   text: 'text-amber-700',   dot: 'bg-amber-400' },
+        excused: { label: t('excused'),  bg: 'bg-slate-100',   text: 'text-slate-600',   dot: 'bg-slate-400' },
+    };
     const s = STATUS[status] ?? STATUS.present;
     return (
         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.bg} ${s.text}`}>
@@ -32,6 +33,7 @@ function RateBar({ rate }) {
 }
 
 function ModuleCard({ mod }) {
+    const { t } = useLanguage();
     const [open, setOpen] = useState(false);
     const { stats, sessions } = mod;
     const hasData = stats.total > 0;
@@ -51,12 +53,12 @@ function ModuleCard({ mod }) {
 
             <div className="px-5 py-4 space-y-4">
                 {!hasData ? (
-                    <p className="text-center text-sm text-gray-400 italic py-2">Aucune séance enregistrée.</p>
+                    <p className="text-center text-sm text-gray-400 italic py-2">{t('no_sessions')}</p>
                 ) : (
                     <>
                         {/* Rate */}
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-gray-500">Taux de présence</span>
+                            <span className="text-xs font-medium text-gray-500">{t('attendance_rate')}</span>
                             <span className={`text-lg font-bold ${rateColor}`}>
                                 {stats.rate !== null ? `${stats.rate}%` : '—'}
                             </span>
@@ -66,10 +68,10 @@ function ModuleCard({ mod }) {
                         {/* Stats grid */}
                         <div className="grid grid-cols-4 gap-2 text-center">
                             {[
-                                { label: 'Présent',  value: stats.present, color: 'text-emerald-600 bg-emerald-50' },
-                                { label: 'Absent',   value: stats.absent,  color: 'text-red-600 bg-red-50' },
-                                { label: 'Retard',   value: stats.late,    color: 'text-amber-600 bg-amber-50' },
-                                { label: 'Excusé',   value: stats.excused, color: 'text-slate-600 bg-slate-50' },
+                                { label: t('present'),  value: stats.present, color: 'text-emerald-600 bg-emerald-50' },
+                                { label: t('absent'),   value: stats.absent,  color: 'text-red-600 bg-red-50' },
+                                { label: t('late'),     value: stats.late,    color: 'text-amber-600 bg-amber-50' },
+                                { label: t('excused'),  value: stats.excused, color: 'text-slate-600 bg-slate-50' },
                             ].map(s => (
                                 <div key={s.label} className={`rounded-lg px-2 py-2 ${s.color}`}>
                                     <p className="text-xl font-bold leading-none">{s.value}</p>
@@ -77,7 +79,7 @@ function ModuleCard({ mod }) {
                                 </div>
                             ))}
                         </div>
-                        <p className="text-center text-xs text-gray-400">{stats.total} séance{stats.total > 1 ? 's' : ''} au total</p>
+                        <p className="text-center text-xs text-gray-400">{stats.total} {t('total_sessions').toLowerCase()}</p>
                     </>
                 )}
 
@@ -87,7 +89,7 @@ function ModuleCard({ mod }) {
                         onClick={() => setOpen(o => !o)}
                         className="flex w-full items-center justify-between rounded-lg border border-gray-100 px-3 py-2 text-xs font-medium text-gray-500 hover:bg-gray-50 transition"
                     >
-                        <span>{open ? 'Masquer' : 'Voir'} les séances</span>
+                        <span>{open ? t('hide_sessions') : t('show_sessions')}</span>
                         <svg className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
                             fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -121,6 +123,7 @@ function ModuleCard({ mod }) {
 }
 
 export default function Attendance({ modules }) {
+    const { t } = useLanguage();
     const semesters = [...new Set(modules.map(m => m.semester))].sort((a, b) => a - b);
 
     const totalSessions = modules.reduce((s, m) => s + m.stats.total, 0);
@@ -131,7 +134,7 @@ export default function Attendance({ modules }) {
         : null;
 
     return (
-        <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Mon Assiduité</h2>}>
+        <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('attendance_title')}</h2>}>
             <Head title="Assiduité" />
 
             <div className="py-10">
@@ -141,11 +144,11 @@ export default function Attendance({ modules }) {
                     {totalSessions > 0 && (
                         <div className="grid grid-cols-3 gap-4">
                             {[
-                                { label: 'Taux global',    value: avgRate !== null ? `${avgRate}%` : '—',
+                                { label: t('global_rate'),    value: avgRate !== null ? `${avgRate}%` : '—',
                                   color: avgRate === null ? 'text-gray-400' : avgRate >= 80 ? 'text-emerald-600' : avgRate >= 60 ? 'text-amber-500' : 'text-red-600',
                                   bg: 'bg-white' },
-                                { label: 'Total séances',  value: totalSessions, color: 'text-indigo-600',  bg: 'bg-white' },
-                                { label: 'Absences',       value: totalAbsences, color: totalAbsences > 0 ? 'text-red-600' : 'text-emerald-600', bg: 'bg-white' },
+                                { label: t('total_sessions'),  value: totalSessions, color: 'text-indigo-600',  bg: 'bg-white' },
+                                { label: t('total_absences'),  value: totalAbsences, color: totalAbsences > 0 ? 'text-red-600' : 'text-emerald-600', bg: 'bg-white' },
                             ].map(s => (
                                 <div key={s.label} className={`rounded-xl ${s.bg} shadow-sm px-5 py-4 text-center`}>
                                     <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
@@ -157,13 +160,13 @@ export default function Attendance({ modules }) {
 
                     {modules.length === 0 ? (
                         <div className="rounded-xl bg-white py-16 text-center shadow-sm">
-                            <p className="text-gray-400 text-sm">Aucun module inscrit.</p>
+                            <p className="text-gray-400 text-sm">{t('no_enrolled')}</p>
                         </div>
                     ) : (
                         semesters.map(sem => (
                             <div key={sem}>
                                 <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                                    Semestre {sem}
+                                    {t('semester')} {sem}
                                 </h3>
                                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                     {modules.filter(m => m.semester === sem).map(mod => (

@@ -1,6 +1,7 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 /* ── Stat card ───────────────────────────────────────────────────────── */
 function StatCard({ label, value, sub, icon, colorClass }) {
@@ -39,6 +40,7 @@ const SEL = 'rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm s
 
 /* ── Page ────────────────────────────────────────────────────────────── */
 export default function Dashboard({ stats, moduleSummary, specializations, filters }) {
+    const { t } = useLanguage();
     const [specId, setSpecId] = useState(filters.specialization_id ?? '');
     const [semId,  setSemId]  = useState(filters.semester_id       ?? '');
 
@@ -62,7 +64,6 @@ export default function Dashboard({ stats, moduleSummary, specializations, filte
         );
     }
 
-    // Progress computed from filtered moduleSummary when available
     const visibleModules   = moduleSummary ?? [];
     const visibleTotal     = visibleModules.length;
     const visiblePublished = visibleModules.filter((m) => m.is_published).length;
@@ -73,55 +74,52 @@ export default function Dashboard({ stats, moduleSummary, specializations, filte
     const bothSelected = specId && semId;
 
     return (
-        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Admin Dashboard</h2>}>
-            <Head title="Admin Dashboard" />
+        <AdminLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">{t('admin_dashboard')}</h2>}>
+            <Head title={t('admin_dashboard')} />
 
             <div className="py-10">
                 <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
 
                     {/* ── Global stats ── */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                        <StatCard label="Students"      value={stats.students}       icon="🎓" colorClass="border-emerald-500" />
-                        <StatCard label="Teachers"      value={stats.teachers}       icon="👩‍🏫" colorClass="border-blue-500" />
-                        <StatCard label="Modules"       value={stats.modules}        icon="📚" colorClass="border-indigo-500"
-                            sub={`${stats.modules_published} published · ${stats.modules_pending} pending`} />
-                        <StatCard label="Grades Entered" value={stats.grades_entered} icon="📝" colorClass="border-amber-500"
-                            sub={`${stats.students_graded} student${stats.students_graded !== 1 ? 's' : ''} graded`} />
+                        <StatCard label={t('students_count')}     value={stats.students}       icon="🎓" colorClass="border-emerald-500" />
+                        <StatCard label={t('stat_teachers')}      value={stats.teachers}       icon="👩‍🏫" colorClass="border-blue-500" />
+                        <StatCard label={t('nav_modules')}        value={stats.modules}        icon="📚" colorClass="border-indigo-500"
+                            sub={`${stats.modules_published} ${t('published_badge').toLowerCase()} · ${stats.modules_pending} ${t('pending_label')}`} />
+                        <StatCard label={t('stat_grades_entered')} value={stats.grades_entered} icon="📝" colorClass="border-amber-500"
+                            sub={`${stats.students_graded} ${t('students_graded_label')}`} />
                     </div>
 
                     {/* ── Results publication status ── */}
                     <div className="rounded-xl bg-white p-6 shadow-sm space-y-5">
-                        {/* Header */}
                         <div className="flex items-center justify-between">
-                            <h3 className="font-semibold text-gray-900">Results Publication Status</h3>
+                            <h3 className="font-semibold text-gray-900">{t('results_pub_status')}</h3>
                             <Link href={route('admin.results.index')} className="text-xs font-medium text-indigo-600 hover:underline">
-                                Manage →
+                                {t('manage')}
                             </Link>
                         </div>
 
                         {/* Cascading filter */}
                         <div className="flex flex-wrap items-end gap-3">
-                            {/* Specialization */}
                             <div>
                                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400">
-                                    Specialization
+                                    {t('specialization')}
                                 </label>
                                 <select value={specId} onChange={(e) => handleSpecChange(e.target.value)} className={SEL}>
-                                    <option value="">— All specializations —</option>
+                                    <option value="">{t('all_specializations')}</option>
                                     {specializations.map((s) => (
                                         <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
                                     ))}
                                 </select>
                             </div>
 
-                            {/* Semester */}
                             <div>
                                 <label className={`mb-1 block text-xs font-semibold uppercase tracking-wide ${!specId ? 'text-gray-300' : 'text-gray-400'}`}>
-                                    Semester
+                                    {t('semester')}
                                 </label>
                                 <select value={semId} onChange={(e) => handleSemChange(e.target.value)}
                                     className={SEL} disabled={!specId}>
-                                    <option value="">— All semesters —</option>
+                                    <option value="">{t('all_semesters')}</option>
                                     {semesterList.map((s) => (
                                         <option key={s.id} value={s.id}>{s.name}</option>
                                     ))}
@@ -131,26 +129,24 @@ export default function Dashboard({ stats, moduleSummary, specializations, filte
                             {(specId || semId) && (
                                 <button onClick={() => handleSpecChange('')}
                                     className="rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-500 hover:bg-gray-50">
-                                    Clear
+                                    {t('clear')}
                                 </button>
                             )}
                         </div>
 
-                        {/* Empty state — no selection yet */}
                         {!bothSelected && (
                             <div className="rounded-lg border border-dashed border-gray-200 py-10 text-center text-sm text-gray-400">
-                                Select a specialization and semester to see the publication status.
+                                {t('select_spec_sem_hint')}
                             </div>
                         )}
 
-                        {/* Progress + table */}
                         {bothSelected && (
                             <>
                                 {/* Progress bar */}
                                 <div>
                                     <div className="mb-1.5 flex items-center justify-between text-xs text-gray-500">
                                         <span>
-                                            {visiblePublished} of {visibleTotal} module{visibleTotal !== 1 ? 's' : ''} published
+                                            {visiblePublished} {t('of_label')} {visibleTotal} {t('modules_published_label')}
                                             {selectedSpec && semId && (
                                                 <span className="ml-2 text-gray-400">
                                                     — {selectedSpec.code} · {semesterList.find(s => String(s.id) === String(semId))?.name}
@@ -169,17 +165,17 @@ export default function Dashboard({ stats, moduleSummary, specializations, filte
 
                                 {/* Table */}
                                 {visibleTotal === 0 ? (
-                                    <p className="text-center text-sm text-gray-400 py-6">No modules in this semester.</p>
+                                    <p className="text-center text-sm text-gray-400 py-6">{t('no_modules_semester')}</p>
                                 ) : (
                                     <div className="overflow-x-auto rounded-lg border border-gray-100">
                                         <table className="min-w-full divide-y divide-gray-100 text-sm">
                                             <thead className="bg-gray-50">
                                                 <tr>
-                                                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Module</th>
-                                                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Teacher</th>
-                                                    <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">Grades</th>
-                                                    <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">Students</th>
-                                                    <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">Status</th>
+                                                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">{t('col_module')}</th>
+                                                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">{t('teacher')}</th>
+                                                    <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">{t('col_grades')}</th>
+                                                    <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">{t('students_count')}</th>
+                                                    <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">{t('status')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-50 bg-white">
@@ -188,7 +184,7 @@ export default function Dashboard({ stats, moduleSummary, specializations, filte
                                                         <td className="px-4 py-3 font-medium text-gray-900">{m.name}</td>
                                                         <td className="px-4 py-3 text-gray-500">
                                                             {m.teacher_name === '—'
-                                                                ? <span className="italic text-red-400 text-xs">Unassigned</span>
+                                                                ? <span className="italic text-red-400 text-xs">{t('unassigned')}</span>
                                                                 : m.teacher_name}
                                                         </td>
                                                         <td className="px-4 py-3 text-center text-gray-600">
@@ -202,12 +198,12 @@ export default function Dashboard({ stats, moduleSummary, specializations, filte
                                                             {m.is_published ? (
                                                                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                                                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                                                    Published
+                                                                    {t('published_badge')}
                                                                 </span>
                                                             ) : (
                                                                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-600">
                                                                     <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                                                                    Pending
+                                                                    {t('status_pending')}
                                                                 </span>
                                                             )}
                                                         </td>
@@ -223,15 +219,15 @@ export default function Dashboard({ stats, moduleSummary, specializations, filte
 
                     {/* ── Quick actions ── */}
                     <div className="rounded-xl bg-white p-6 shadow-sm">
-                        <h3 className="mb-4 font-semibold text-gray-900">Quick Actions</h3>
+                        <h3 className="mb-4 font-semibold text-gray-900">{t('quick_actions')}</h3>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            <QuickLink href={route('admin.bulk-import.index')}  icon="📤" title="Bulk Import Users"     desc="Upload Excel to add students or teachers" />
-                            <QuickLink href={route('admin.users')}              icon="👥" title="Manage Users"          desc="Search, filter, resend credentials" />
-                            <QuickLink href={route('admin.modules.index')}      icon="📚" title="Manage Modules"        desc="Create, edit, assign teachers" />
-                            <QuickLink href={route('admin.results.index')}      icon="📊" title="Results"               desc="Publish grades, view rankings" />
-                            <QuickLink href={route('admin.schedules.index')}    icon="🗓️" title="Schedules"             desc="Manage class timetables" />
-                            <QuickLink href={route('admin.exams.index')}        icon="📋" title="Exams"                 desc="Announce upcoming exams" />
-                            <QuickLink href={route('admin.advancement.index')}  icon="🎓" title="Semester Advancement"  desc="Advance students to the next semester" />
+                            <QuickLink href={route('admin.bulk-import.index')}  icon="📤" title={t('ql_bulk_import')}     desc={t('ql_bulk_import_desc')} />
+                            <QuickLink href={route('admin.users')}              icon="👥" title={t('ql_manage_users')}    desc={t('ql_manage_users_desc')} />
+                            <QuickLink href={route('admin.modules.index')}      icon="📚" title={t('ql_manage_modules')}  desc={t('ql_manage_modules_desc')} />
+                            <QuickLink href={route('admin.results.index')}      icon="📊" title={t('nav_academic_results')} desc={t('ql_results_desc')} />
+                            <QuickLink href={route('admin.schedules.index')}    icon="🗓️" title={t('nav_schedules')}      desc={t('ql_schedules_desc')} />
+                            <QuickLink href={route('admin.exams.index')}        icon="📋" title={t('nav_exams')}          desc={t('ql_exams_desc')} />
+                            <QuickLink href={route('admin.advancement.index')}  icon="🎓" title={t('ql_advancement')}     desc={t('ql_advancement_desc')} />
                         </div>
                     </div>
 

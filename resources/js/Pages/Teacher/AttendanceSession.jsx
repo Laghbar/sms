@@ -1,16 +1,9 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
-const STATUS_CONFIG = {
-    present: { label: 'Present', bg: 'bg-emerald-500', ring: 'ring-emerald-400', text: 'text-white', light: 'bg-emerald-50 text-emerald-700' },
-    absent:  { label: 'Absent',  bg: 'bg-red-500',     ring: 'ring-red-400',     text: 'text-white', light: 'bg-red-50 text-red-700' },
-    late:    { label: 'Late',    bg: 'bg-amber-400',   ring: 'ring-amber-300',   text: 'text-white', light: 'bg-amber-50 text-amber-700' },
-    excused: { label: 'Excused', bg: 'bg-slate-400',   ring: 'ring-slate-300',   text: 'text-white', light: 'bg-slate-50 text-slate-700' },
-};
-
-function StatusButton({ status, selected, onClick }) {
-    const cfg = STATUS_CONFIG[status];
+function StatusButton({ status, selected, onClick, cfg }) {
     return (
         <button
             type="button"
@@ -27,7 +20,16 @@ function StatusButton({ status, selected, onClick }) {
 }
 
 export default function AttendanceSession({ module, date, rows, sessions }) {
+    const { t } = useLanguage();
     const { flash } = usePage().props;
+
+    const STATUS_CONFIG = {
+        present: { label: t('present'), bg: 'bg-emerald-500', ring: 'ring-emerald-400', text: 'text-white', light: 'bg-emerald-50 text-emerald-700' },
+        absent:  { label: t('absent'),  bg: 'bg-red-500',     ring: 'ring-red-400',     text: 'text-white', light: 'bg-red-50 text-red-700' },
+        late:    { label: t('late'),    bg: 'bg-amber-400',   ring: 'ring-amber-300',   text: 'text-white', light: 'bg-amber-50 text-amber-700' },
+        excused: { label: t('excused'), bg: 'bg-slate-400',   ring: 'ring-slate-300',   text: 'text-white', light: 'bg-slate-50 text-slate-700' },
+    };
+
     const [records, setRecords] = useState(
         rows.map(r => ({ student_id: r.student_id, status: r.status, note: r.note }))
     );
@@ -56,7 +58,8 @@ export default function AttendanceSession({ module, date, rows, sessions }) {
     function save() {
         const unmarked = records.filter(r => !r.status);
         if (unmarked.length > 0) {
-            const ok = window.confirm(`${unmarked.length} student(s) have no status. They will be skipped. Continue?`);
+            const msg = t('confirm_unmarked').replace('{n}', unmarked.length);
+            const ok = window.confirm(msg);
             if (!ok) return;
         }
         setSaving(true);
@@ -104,7 +107,7 @@ export default function AttendanceSession({ module, date, rows, sessions }) {
                     <div className="rounded-xl bg-white px-6 py-4 shadow-sm">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                                <label className="text-sm font-medium text-gray-600">Session date</label>
+                                <label className="text-sm font-medium text-gray-600">{t('session_date')}</label>
                                 <input
                                     type="date"
                                     value={selectedDate}
@@ -113,7 +116,7 @@ export default function AttendanceSession({ module, date, rows, sessions }) {
                                 />
                             </div>
                             <div className="text-sm text-gray-500">
-                                <span className="font-semibold text-indigo-600">{markedCount}</span> / {totalCount} marked
+                                <span className="font-semibold text-indigo-600">{markedCount}</span> / {totalCount} {t('marked')}
                             </div>
                         </div>
 
@@ -129,15 +132,15 @@ export default function AttendanceSession({ module, date, rows, sessions }) {
                     {/* Student list */}
                     {rows.length === 0 ? (
                         <div className="rounded-xl bg-white py-12 text-center text-sm text-gray-400 shadow-sm">
-                            No students enrolled in this module.
+                            {t('no_students')}
                         </div>
                     ) : (
                         <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                             {/* Quick-mark all */}
                             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
-                                <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">Students</span>
+                                <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t('students_label')}</span>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-400">Mark all:</span>
+                                    <span className="text-xs text-gray-400">{t('mark_all')}</span>
                                     {Object.keys(STATUS_CONFIG).map(s => (
                                         <button key={s} type="button"
                                             onClick={() => setRecords(prev => prev.map(r => ({ ...r, status: s })))}
@@ -171,6 +174,7 @@ export default function AttendanceSession({ module, date, rows, sessions }) {
                                                         status={s}
                                                         selected={rec.status === s}
                                                         onClick={() => setStatus(row.student_id, s)}
+                                                        cfg={STATUS_CONFIG[s]}
                                                     />
                                                 ))}
                                             </div>
@@ -180,7 +184,7 @@ export default function AttendanceSession({ module, date, rows, sessions }) {
                                                 type="text"
                                                 value={rec.note}
                                                 onChange={e => setNote(row.student_id, e.target.value)}
-                                                placeholder="Note…"
+                                                placeholder={t('note_placeholder_att')}
                                                 className="w-32 rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-600 focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-300"
                                             />
                                         </div>
@@ -195,7 +199,7 @@ export default function AttendanceSession({ module, date, rows, sessions }) {
                                     disabled={saving || markedCount === 0}
                                     className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                                 >
-                                    {saving ? 'Saving…' : 'Save Attendance'}
+                                    {saving ? t('loading') : t('save_attendance')}
                                 </button>
                             </div>
                         </div>
@@ -205,17 +209,17 @@ export default function AttendanceSession({ module, date, rows, sessions }) {
                     {sessions.length > 0 && (
                         <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                             <div className="border-b border-gray-100 px-5 py-3">
-                                <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">Session History</h3>
+                                <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t('session_history')}</h3>
                             </div>
                             <table className="min-w-full divide-y divide-gray-100">
                                 <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-400">
                                     <tr>
                                         <th className="px-5 py-2.5 text-left">Date</th>
-                                        <th className="px-3 py-2.5 text-center text-emerald-600">Present</th>
-                                        <th className="px-3 py-2.5 text-center text-red-500">Absent</th>
-                                        <th className="px-3 py-2.5 text-center text-amber-500">Late</th>
-                                        <th className="px-3 py-2.5 text-center text-slate-500">Excused</th>
-                                        <th className="px-3 py-2.5 text-center">Rate</th>
+                                        <th className="px-3 py-2.5 text-center text-emerald-600">{t('present')}</th>
+                                        <th className="px-3 py-2.5 text-center text-red-500">{t('absent')}</th>
+                                        <th className="px-3 py-2.5 text-center text-amber-500">{t('late')}</th>
+                                        <th className="px-3 py-2.5 text-center text-slate-500">{t('excused')}</th>
+                                        <th className="px-3 py-2.5 text-center">{t('attendance_rate_col')}</th>
                                         <th className="px-3 py-2.5" />
                                     </tr>
                                 </thead>
@@ -245,7 +249,7 @@ export default function AttendanceSession({ module, date, rows, sessions }) {
                                                         onClick={() => handleDateChange(s.session_date)}
                                                         className="text-xs text-indigo-500 hover:text-indigo-700"
                                                     >
-                                                        View
+                                                        {t('view')}
                                                     </button>
                                                 </td>
                                             </tr>
